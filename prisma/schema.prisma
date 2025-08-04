@@ -1,0 +1,290 @@
+// Esquema de base de datos para Sumar+
+// Sistema de donaciones y crowdfunding solidario
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enumeraciones
+enum UserType {
+  INDIVIDUAL  // Persona física
+  ORGANIZATION // ONG o organización
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum CampaignType {
+  DONATION      // Donación solidaria
+  CROWDFUNDING  // Crowdfunding para proyectos
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  PAYPAL
+  PIX
+  BANK_TRANSFER
+}
+
+// Modelo de Usuario
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  firstName         String
+  lastName          String?
+  organizationName  String?   // Solo para organizaciones
+  userType          UserType  @default(INDIVIDUAL)
+  role              UserRole  @default(USER)
+  avatar            String?
+  bio               String?
+  phone             String?
+  address           String?
+  city              String?
+  country           String    @default("ES")
+  isVerified        Boolean   @default(false)
+  isActive          Boolean   @default(true)
+  emailVerifiedAt   DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relaciones
+  campaigns         Campaign[]
+  donations         Donation[]
+  comments          Comment[]
+  campaignUpdates   CampaignUpdate[]
+  notifications     Notification[]
+  refreshTokens     RefreshToken[]
+
+  @@map("users")
+}
+
+// Modelo de Token de Refresh
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// Modelo de Categorías
+model Category {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+  icon        String?
+  color       String?
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  campaigns   Campaign[]
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+// Modelo de Subcategorías
+model Subcategory {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  categoryId  String
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  campaigns   Campaign[]
+
+  @@unique([name, categoryId])
+  @@map("subcategories")
+}
+
+// Modelo de Campañas
+model Campaign {
+  id              String         @id @default(cuid())
+  title           String
+  slug            String         @unique
+  description     String
+  shortDescription String?
+  images          String[]       // Array de URLs de imágenes
+  goalAmount      Decimal        @db.Decimal(10, 2)
+  currentAmount   Decimal        @default(0) @db.Decimal(10, 2)
+  currency        String         @default("EUR")
+  type            CampaignType
+  status          CampaignStatus @default(DRAFT)
+  startDate       DateTime?
+  endDate         DateTime?
+  location        String?
+  beneficiaryInfo String?        // Información del beneficiario
+  urgencyLevel    Int            @default(1) // 1-5, siendo 5 muy urgente
+  isVerified      Boolean        @default(false)
+  isFeatured      Boolean        @default(false)
+  viewCount       Int            @default(0)
+  shareCount      Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relaciones
+  creatorId       String
+  creator         User           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        Category       @relation(fields: [categoryId], references: [id])
+  subcategoryId   String?
+  subcategory     Subcategory?   @relation(fields: [subcategoryId], references: [id])
+  
+  donations       Donation[]
+  comments        Comment[]
+  updates         CampaignUpdate[]
+  tags            CampaignTag[]
+
+  @@map("campaigns")
+}
+
+// Modelo de Tags para Campañas
+model Tag {
+  id        String @id @default(cuid())
+  name      String @unique
+  color     String?
+  createdAt DateTime @default(now())
+
+  campaigns CampaignTag[]
+
+  @@map("tags")
+}
+
+// Tabla intermedia para Campañas y Tags
+model CampaignTag {
+  campaignId String
+  tagId      String
+  createdAt  DateTime @default(now())
+
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([campaignId, tagId])
+  @@map("campaign_tags")
+}
+
+// Modelo de Donaciones
+model Donation {
+  id              String         @id @default(cuid())
+  amount          Decimal        @db.Decimal(10, 2)
+  currency        String         @default("EUR")
+  message         String?        // Mensaje del donante
+  isAnonymous     Boolean        @default(false)
+  paymentMethod   PaymentMethod
+  paymentId       String?        // ID del pago en el proveedor (Stripe, PayPal, etc.)
+  status          DonationStatus @default(PENDING)
+  processedAt     DateTime?
+  refundedAt      DateTime?
+  refundReason    String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  // Relaciones
+  donorId         String?        // Puede ser null para donaciones anónimas
+  donor           User?          @relation(fields: [donorId], references: [id])
+  campaignId      String
+  campaign        Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("donations")
+}
+
+// Modelo de Comentarios
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relaciones
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// Modelo de Actualizaciones de Campañas
+model CampaignUpdate {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  images      String[] // Array de URLs de imágenes
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relaciones
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("campaign_updates")
+}
+
+// Modelo de Notificaciones
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // 'donation', 'campaign_update', 'comment', etc.
+  isRead    Boolean  @default(false)
+  data      Json?    // Datos adicionales en formato JSON
+  createdAt DateTime @default(now())
+
+  // Relaciones
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Modelo de Configuración del Sistema
+model SystemConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_config")
+}
