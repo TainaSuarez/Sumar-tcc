@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Menu, X, Heart, User, LogOut, Settings } from 'lucide-react';
+import { Menu, X, Heart, User, LogOut, Settings, FolderOpen } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 
@@ -75,6 +75,13 @@ export function Navbar() {
                   
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    <button
+                      onClick={() => router.push('/my-campaigns')}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <FolderOpen className="h-4 w-4 mr-2" />
+                      Mis Campañas
+                    </button>
                     <button
                       onClick={() => router.push('/dashboard')}
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
@@ -156,6 +163,15 @@ export function Navbar() {
                   <div className="px-3 py-2 text-sm text-gray-500">
                     Hola, {session.user?.name}
                   </div>
+                  <button
+                    onClick={() => {
+                      router.push('/my-campaigns');
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-gray-700 hover:text-purple-600 block px-3 py-2 text-base font-medium w-full text-left"
+                  >
+                    Mis Campañas
+                  </button>
                   <button
                     onClick={() => {
                       router.push('/dashboard');

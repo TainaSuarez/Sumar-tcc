@@ -1,0 +1,379 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Upload, X, Loader2, DollarSign } from 'lucide-react';
+import Image from 'next/image';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { createCampaignSchema } from '@/lib/validations/campaign';
+import { type CreateCampaignInput } from '@/types/campaign';
+
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface CampaignFormProps {
+  onSubmit?: (data: CreateCampaignInput) => void;
+  isLoading?: boolean;
+  error?: string | null;
+  success?: string | null;
+}
+
+export function CampaignForm({ onSubmit, isLoading = false, error, success }: CampaignFormProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [shortDescriptionCount, setShortDescriptionCount] = useState(0);
+
+  const form = useForm<CreateCampaignInput>({
+    resolver: zodResolver(createCampaignSchema),
+    defaultValues: {
+      title: '',
+      categoryId: '',
+      goalAmount: 0,
+      shortDescription: '',
+      description: '',
+      coverImage: undefined,
+    },
+  });
+
+  // Cargar categorías desde la API
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data);
+        } else {
+          console.error('Error al cargar categorías');
+        }
+      } catch (error) {
+        console.error('Error al cargar categorías:', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Manejar cambios en la descripción corta para el contador
+  const shortDescription = form.watch('shortDescription');
+  useEffect(() => {
+    setShortDescriptionCount(shortDescription?.length || 0);
+  }, [shortDescription]);
+
+  // Manejar subida de imagen
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido');
+        return;
+      }
+
+      // Validar tamaño (máx. 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('La imagen debe ser menor a 5MB');
+        return;
+      }
+
+      // Crear preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Actualizar el formulario
+      form.setValue('coverImage', file);
+    }
+  };
+
+  // Remover imagen
+  const removeImage = () => {
+    setImagePreview(null);
+    form.setValue('coverImage', undefined);
+    // Limpiar el input file
+    const fileInput = document.getElementById('coverImage') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
+  const handleSubmit = (data: CreateCampaignInput) => {
+    if (!success) {
+      onSubmit?.(data);
+    }
+  };
+
+  // Deshabilitar formulario si hay éxito
+  const isFormDisabled = isLoading || !!success;
+
+  return (
+    <Card className="w-full max-w-4xl mx-auto shadow-xl border-0 bg-white">
+      <CardHeader className="space-y-1 pb-6">
+        <CardTitle className="text-2xl font-bold text-center text-gray-900">
+          Crear Nueva Campaña
+        </CardTitle>
+        <CardDescription className="text-center text-gray-600">
+          Completa la información para crear tu campaña de crowdfunding
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        {error && (
+          <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+            {success}
+          </div>
+        )}
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Título */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título de la campaña</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Escribe un título atractivo para tu campaña"
+                      disabled={isFormDisabled}
+                      className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Categoría y Monto Objetivo en una fila */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Categoría */}
+              <FormField
+                control={form.control}
+                name="categoryId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Categoría</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading || loadingCategories}>
+                      <FormControl>
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                          <SelectValue placeholder="Selecciona una categoría" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {loadingCategories ? (
+                          <SelectItem value="loading" disabled>
+                            <div className="flex items-center">
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Cargando categorías...
+                            </div>
+                          </SelectItem>
+                        ) : categories.length === 0 ? (
+                          <SelectItem value="empty" disabled>
+                            No hay categorías disponibles
+                          </SelectItem>
+                        ) : (
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Monto Objetivo */}
+              <FormField
+                control={form.control}
+                name="goalAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Monto objetivo</FormLabel>
+                    <FormControl>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                        <Input
+                          type="number"
+                          placeholder="0"
+                          disabled={isFormDisabled}
+                          className="h-12 pl-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+                    </FormControl>
+                    <FormDescription>
+                      Monto mínimo: $100, máximo: $1,000,000
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Descripción Corta */}
+            <FormField
+              control={form.control}
+              name="shortDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción corta</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Escribe una descripción breve y atractiva de tu campaña"
+                      disabled={isFormDisabled}
+                      className="min-h-[100px] border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 resize-none"
+                      maxLength={150}
+                      {...field}
+                    />
+                  </FormControl>
+                  <div className="flex justify-between items-center">
+                    <FormDescription>
+                      Esta descripción aparecerá en las vistas previas de tu campaña
+                    </FormDescription>
+                    <span className={`text-sm ${shortDescriptionCount > 150 ? 'text-red-500' : 'text-gray-500'}`}>
+                      {shortDescriptionCount}/150
+                    </span>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Descripción Extendida */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Descripción detallada</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Describe tu proyecto en detalle. Incluye objetivos, beneficiarios, cronograma, y cualquier información relevante que ayude a los donantes a entender tu causa."
+                      disabled={isFormDisabled}
+                      className="min-h-[200px] border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Proporciona todos los detalles importantes sobre tu proyecto
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Imagen de Portada */}
+            <FormField
+              control={form.control}
+              name="coverImage"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Imagen de portada</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      {!imagePreview ? (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-emerald-500 transition-colors">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="mt-4">
+                            <label htmlFor="coverImage" className="cursor-pointer">
+                              <span className="mt-2 block text-sm font-medium text-gray-900">
+                                Sube una imagen de portada
+                              </span>
+                              <span className="mt-1 block text-sm text-gray-600">
+                                Tamaño recomendado: 1200x630px, máx. 5MB
+                              </span>
+                            </label>
+                            <input
+                              id="coverImage"
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleImageUpload}
+                              disabled={isFormDisabled}
+                            />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="relative">
+                          <div className="relative aspect-[1200/630] w-full overflow-hidden rounded-lg">
+                            <Image
+                              src={imagePreview}
+                              alt="Vista previa de la imagen de portada"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute top-2 right-2"
+                            onClick={removeImage}
+                            disabled={isFormDisabled}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Una imagen atractiva ayuda a captar la atención de los donantes
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Botones */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-6">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 h-12 border-gray-300 hover:bg-gray-50 transition-colors"
+                disabled={isFormDisabled}
+              >
+                Guardar como borrador
+              </Button>
+              <Button
+                type="submit"
+                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors"
+                disabled={isFormDisabled}
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Crear campaña
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}

@@ -56,7 +56,7 @@ export function RegisterForm() {
       if (!response.ok) {
         if (result.details) {
           // Errores de validación
-          const errorMessages = result.details.map((detail: any) => detail.message).join(', ');
+          const errorMessages = result.details.map((detail: { message: string }) => detail.message).join(', ');
           setError(errorMessages);
         } else {
           setError(result.error || 'Error al registrar usuario');

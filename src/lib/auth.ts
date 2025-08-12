@@ -7,7 +7,7 @@ import { prisma } from './db';
 import { UserRole, UserType } from '@prisma/client';
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
   providers: [
     // Proveedor de credenciales (email/password)
     CredentialsProvider({

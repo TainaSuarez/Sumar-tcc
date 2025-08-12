@@ -240,15 +240,24 @@ model Comment {
   @@map("comments")
 }
 
+// Enumeración para tipos de actualización
+enum UpdateType {
+  TEXT_ONLY    // Solo texto
+  TEXT_IMAGE   // Texto con imagen(es)
+  TEXT_VIDEO   // Texto con video
+}
+
 // Modelo de Actualizaciones de Campañas
 model CampaignUpdate {
-  id          String   @id @default(cuid())
+  id          String     @id @default(cuid())
   title       String
   content     String
-  images      String[] // Array de URLs de imágenes
-  isPublic    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  type        UpdateType @default(TEXT_ONLY)
+  images      String[]   // Array de URLs de imágenes
+  videos      String[]   // Array de URLs de videos
+  isPublic    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   // Relaciones
   campaignId  String
