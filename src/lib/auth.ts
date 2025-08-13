@@ -50,7 +50,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}`,
           image: user.avatar,
           role: user.role,
           userType: user.userType,
@@ -103,14 +103,12 @@ export const authOptions: NextAuthOptions = {
             const newUser = await prisma.user.create({
               data: {
                 email: user.email!,
-                name: user.name!,
+                firstName: user.name!,
                 avatar: user.image,
                 isVerified: true, // Los usuarios de Google se consideran verificados
                 isActive: true,
                 role: UserRole.USER,
-                userType: UserType.DONOR, // Por defecto, los nuevos usuarios son donantes
-                provider: 'google',
-                providerId: account.providerAccountId,
+                userType: UserType.INDIVIDUAL, // Por defecto, los nuevos usuarios son individuales
               }
             });
 
@@ -122,7 +120,7 @@ export const authOptions: NextAuthOptions = {
             const updatedUser = await prisma.user.update({
               where: { id: existingUser.id },
               data: {
-                name: user.name!,
+                firstName: user.name!,
                 avatar: user.image,
                 lastLoginAt: new Date(),
               }
