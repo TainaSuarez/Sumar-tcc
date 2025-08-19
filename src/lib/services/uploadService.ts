@@ -15,26 +15,29 @@ export async function handleFileUpload(request: NextRequest): Promise<{
 
     // Procesar FormData
     for (const [key, value] of formData.entries()) {
-      if (value instanceof File && value.size > 0) {
+      if (typeof value === 'object' && value !== null && 'size' in value && 'type' in value && 'name' in value && value.size > 0) {
+        // Es un archivo
+        const uploadedFile = value as File;
+        
         // Validar que es una imagen
-        if (!value.type.startsWith('image/')) {
+        if (!uploadedFile.type.startsWith('image/')) {
           return { fields, error: 'Solo se permiten archivos de imagen' };
         }
 
         // Validar tamaño (máx. 5MB)
-        if (value.size > 5 * 1024 * 1024) {
+        if (uploadedFile.size > 5 * 1024 * 1024) {
           return { fields, error: 'La imagen debe ser menor a 5MB' };
         }
 
         // Validar tipos permitidos
         const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
-        if (!allowedTypes.includes(value.type)) {
+        if (!allowedTypes.includes(uploadedFile.type)) {
           return { fields, error: 'Solo se permiten imágenes JPEG, PNG o WEBP' };
         }
 
         // Generar nombre único
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const extension = path.extname(value.name);
+        const extension = path.extname(uploadedFile.name);
         const filename = `campaign-${uniqueSuffix}${extension}`;
         
         // Asegurar que el directorio existe
@@ -47,14 +50,14 @@ export async function handleFileUpload(request: NextRequest): Promise<{
 
         // Guardar archivo
         const fullPath = path.join(uploadPath, filename);
-        const buffer = Buffer.from(await value.arrayBuffer());
+        const buffer = Buffer.from(await uploadedFile.arrayBuffer());
         await fs.writeFile(fullPath, buffer);
 
         file = {
           filename,
           path: fullPath,
-          size: value.size,
-          mimetype: value.type
+          size: uploadedFile.size,
+          mimetype: uploadedFile.type
         };
       } else if (typeof value === 'string') {
         fields[key] = value;

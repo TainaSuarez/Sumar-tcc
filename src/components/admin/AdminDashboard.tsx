@@ -163,7 +163,7 @@ export function AdminDashboard() {
   if (!stats) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Tarjetas de estadísticas principales */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
