@@ -25,13 +25,16 @@ export interface CreateCampaignInput {
   shortDescription: string;
   description: string;
   coverImage?: File;
+  additionalImages?: File[];
 }
 
 // Interface para crear una campaña (backend con creatorId)
-export interface CreateCampaignData extends Omit<CreateCampaignInput, 'coverImage'> {
+export interface CreateCampaignData extends Omit<CreateCampaignInput, 'coverImage' | 'additionalImages'> {
   creatorId: string;
   coverImage?: File;
-  imageFilename?: string;
+  additionalImages?: File[];
+  imageFilename?: string; // Compatibilidad hacia atrás
+  images?: string[]; // URLs de imágenes procesadas
 }
 
 // Interface para actualizar una campaña

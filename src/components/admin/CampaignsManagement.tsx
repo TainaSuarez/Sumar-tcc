@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,12 @@ import {
   ChevronRight,
   Calendar,
   Target,
-  TrendingUp
+  TrendingUp,
+  Download,
+  Users,
+  SortAsc,
+  SortDesc,
+  Loader2
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -36,6 +41,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CampaignEditModal } from './CampaignEditModal';
 
 interface Campaign {
   id: string;
@@ -59,6 +74,8 @@ interface Campaign {
   shareCount: number;
   createdAt: string;
   updatedAt: string;
+  categoryId: string;
+  subcategoryId?: string;
   creator: {
     id: string;
     firstName: string;
@@ -95,29 +112,64 @@ interface CampaignsResponse {
   };
 }
 
+interface CampaignWithDetails extends Campaign {
+  stats?: {
+    donations: { total: number; completed: number; totalAmount: number };
+    comments: number;
+    updates: number;
+  };
+  analytics?: {
+    monthlyDonations: Array<{ month: string; count: number; total: number }>;
+    topDonors: Array<{ id: string; name: string; totalDonated: number; donationCount: number }>;
+  };
+}
+
 export function CampaignsManagement() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState<string | null>(null); // ID de campaña siendo actualizada
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [verifiedFilter, setVerifiedFilter] = useState('all');
+  const [featuredFilter, setFeaturedFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [urgencyFilter, setUrgencyFilter] = useState('all');
+  const [dateFromFilter, setDateFromFilter] = useState('');
+  const [dateToFilter, setDateToFilter] = useState('');
+  const [minAmountFilter, setMinAmountFilter] = useState('');
+  const [maxAmountFilter, setMaxAmountFilter] = useState('');
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<CampaignsResponse['pagination'] | null>(null);
+  const [selectedCampaigns, setSelectedCampaigns] = useState<Set<string>>(new Set());
+  const [selectedCampaign, setSelectedCampaign] = useState<CampaignWithDetails | null>(null);
+  const [showCampaignDetails, setShowCampaignDetails] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
 
-  useEffect(() => {
-    fetchCampaigns();
-  }, [currentPage, searchTerm, statusFilter, typeFilter]);
-
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: '10',
         ...(searchTerm && { search: searchTerm }),
-        ...(statusFilter && { status: statusFilter }),
-        ...(typeFilter && { type: typeFilter }),
+        ...(statusFilter && statusFilter !== 'all' && { status: statusFilter }),
+        ...(typeFilter && typeFilter !== 'all' && { type: typeFilter }),
+        ...(verifiedFilter && verifiedFilter !== 'all' && { isVerified: verifiedFilter }),
+        ...(featuredFilter && featuredFilter !== 'all' && { isFeatured: featuredFilter }),
+        ...(categoryFilter && categoryFilter !== 'all' && { category: categoryFilter }),
+        ...(urgencyFilter && urgencyFilter !== 'all' && { urgencyLevel: urgencyFilter }),
+        ...(dateFromFilter && { dateFrom: dateFromFilter }),
+        ...(dateToFilter && { dateTo: dateToFilter }),
+        ...(minAmountFilter && { minAmount: minAmountFilter }),
+        ...(maxAmountFilter && { maxAmount: maxAmountFilter }),
+        sortBy,
+        sortOrder,
       });
 
       const response = await fetch(`/api/admin/campaigns?${params}`);
@@ -134,9 +186,138 @@ export function CampaignsManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, searchTerm, statusFilter, typeFilter, verifiedFilter, featuredFilter, categoryFilter, urgencyFilter, dateFromFilter, dateToFilter, minAmountFilter, maxAmountFilter, sortBy, sortOrder]);
+
+  useEffect(() => {
+    fetchCampaigns();
+  }, [fetchCampaigns]);
+
+  useEffect(() => {
+    // Cargar categorías
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.categories || []);
+        }
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleCampaignUpdate = async (campaignId: string, updates: Partial<Campaign>) => {
+    try {
+      setUpdating(campaignId);
+      
+      const response = await fetch('/api/admin/campaigns', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ campaignId, updates }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar la campaña');
+      }
+
+      const result = await response.json();
+
+      // Actualizar la lista local con los datos completos del servidor
+      setCampaigns(prev => prev.map(campaign => 
+        campaign.id === campaignId ? { ...campaign, ...updates } : campaign
+      ));
+
+      // Refrescar la lista para asegurar consistencia
+      await fetchCampaigns();
+
+      // La acción se completó exitosamente, no necesitamos mostrar alert
+      console.log('Campaña actualizada exitosamente:', updates);
+    } catch (err) {
+      console.error('Error actualizando campaña:', err);
+      // Error logged to console, no need for alert
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const handleBulkAction = async (action: string) => {
+    if (selectedCampaigns.size === 0) {
+      alert('Selecciona al menos una campaña');
+      return;
+    }
+
+    const campaignIds = Array.from(selectedCampaigns);
+    
+    try {
+      const response = await fetch('/api/admin/campaigns', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action, campaignIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al ejecutar la acción masiva');
+      }
+
+      const result = await response.json();
+      
+      // Recargar campañas
+      await fetchCampaigns();
+      
+      // Limpiar selección
+      setSelectedCampaigns(new Set());
+      
+      alert(`Acción ejecutada exitosamente en ${result.affectedRows} campañas`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error desconocido');
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedCampaigns.size === campaigns.length) {
+      setSelectedCampaigns(new Set());
+    } else {
+      setSelectedCampaigns(new Set(campaigns.map(campaign => campaign.id)));
+    }
+  };
+
+  const handleSelectCampaign = (campaignId: string) => {
+    const newSelection = new Set(selectedCampaigns);
+    if (newSelection.has(campaignId)) {
+      newSelection.delete(campaignId);
+    } else {
+      newSelection.add(campaignId);
+    }
+    setSelectedCampaigns(newSelection);
+  };
+
+  const handleViewCampaign = async (campaignId: string) => {
+    try {
+      const response = await fetch(`/api/admin/campaigns/${campaignId}`);
+      if (!response.ok) {
+        throw new Error('Error al cargar detalles de la campaña');
+      }
+      const data = await response.json();
+      setSelectedCampaign(data.campaign);
+      setShowCampaignDetails(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Error desconocido');
+    }
+  };
+
+  const handleEditCampaign = (campaign: Campaign) => {
+    setEditingCampaign(campaign);
+    setShowEditModal(true);
+  };
+
+  const handleSaveCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
     try {
       const response = await fetch('/api/admin/campaigns', {
         method: 'PATCH',
@@ -147,18 +328,55 @@ export function CampaignsManagement() {
       });
 
       if (!response.ok) {
-        throw new Error('Error al actualizar la campaña');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al actualizar la campaña');
       }
+
+      const result = await response.json();
 
       // Actualizar la lista local
       setCampaigns(prev => prev.map(campaign => 
         campaign.id === campaignId ? { ...campaign, ...updates } : campaign
       ));
 
-      alert('Campaña actualizada exitosamente');
+      // Refrescar datos para asegurar consistencia
+      await fetchCampaigns();
+      
+      // Cerrar el modal de edición
+      setShowEditModal(false);
+      setEditingCampaign(null);
+      
+      console.log('💾 Campaña guardada exitosamente');
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('Error guardando campaña:', err);
+      throw new Error(err instanceof Error ? err.message : 'Error desconocido');
     }
+  };
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setVerifiedFilter('all');
+    setFeaturedFilter('all');
+    setCategoryFilter('all');
+    setUrgencyFilter('all');
+    setDateFromFilter('');
+    setDateToFilter('');
+    setMinAmountFilter('');
+    setMaxAmountFilter('');
+    setSortBy('createdAt');
+    setSortOrder('desc');
+    setCurrentPage(1);
   };
 
   const getCreatorName = (creator: Campaign['creator']) => {
@@ -244,13 +462,22 @@ export function CampaignsManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Filtros y búsqueda */}
+      {/* Filtros avanzados */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros de Búsqueda</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Filtros de Búsqueda Avanzada</CardTitle>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              Limpiar filtros
+            </Button>
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              Exportar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -263,10 +490,10 @@ export function CampaignsManagement() {
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por estado" />
+                <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los estados</SelectItem>
+                <SelectItem value="all">Todos los estados</SelectItem>
                 <SelectItem value="ACTIVE">Activas</SelectItem>
                 <SelectItem value="DRAFT">Borrador</SelectItem>
                 <SelectItem value="COMPLETED">Completadas</SelectItem>
@@ -277,24 +504,183 @@ export function CampaignsManagement() {
 
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrar por tipo" />
+                <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los tipos</SelectItem>
+                <SelectItem value="all">Todos los tipos</SelectItem>
                 <SelectItem value="DONATION">Donación</SelectItem>
                 <SelectItem value="CROWDFUNDING">Crowdfunding</SelectItem>
               </SelectContent>
             </Select>
+
+            <Select value={verifiedFilter} onValueChange={setVerifiedFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Verificación" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="true">Verificadas</SelectItem>
+                <SelectItem value="false">No verificadas</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={featuredFilter} onValueChange={setFeaturedFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Destacadas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="true">Destacadas</SelectItem>
+                <SelectItem value="false">No destacadas</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map(category => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Urgencia" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="1">Baja (1)</SelectItem>
+                <SelectItem value="2">Media-Baja (2)</SelectItem>
+                <SelectItem value="3">Media (3)</SelectItem>
+                <SelectItem value="4">Media-Alta (4)</SelectItem>
+                <SelectItem value="5">Alta (5)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Input
+              type="date"
+              placeholder="Fecha desde"
+              value={dateFromFilter}
+              onChange={(e) => setDateFromFilter(e.target.value)}
+            />
+
+            <Input
+              type="date"
+              placeholder="Fecha hasta"
+              value={dateToFilter}
+              onChange={(e) => setDateToFilter(e.target.value)}
+            />
+
+            <Input
+              type="number"
+              placeholder="Monto mínimo"
+              value={minAmountFilter}
+              onChange={(e) => setMinAmountFilter(e.target.value)}
+            />
+
+            <Input
+              type="number"
+              placeholder="Monto máximo"
+              value={maxAmountFilter}
+              onChange={(e) => setMaxAmountFilter(e.target.value)}
+            />
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSort('createdAt')}
+                className="flex items-center gap-1"
+              >
+                <Calendar className="h-4 w-4" />
+                Fecha
+                {sortBy === 'createdAt' && (
+                  sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
+      {/* Acciones masivas */}
+      {selectedCampaigns.size > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  {selectedCampaigns.size} campaña{selectedCampaigns.size !== 1 ? 's' : ''} seleccionada{selectedCampaigns.size !== 1 ? 's' : ''}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('bulk_activate')}
+                >
+                  <Play className="h-4 w-4 mr-2" />
+                  Activar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('bulk_pause')}
+                >
+                  <Pause className="h-4 w-4 mr-2" />
+                  Pausar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('bulk_verify')}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Verificar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleBulkAction('bulk_feature')}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  Destacar
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCampaigns(new Set())}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Lista de campañas */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>
             Campañas ({pagination?.totalCount || 0})
           </CardTitle>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={campaigns.length > 0 && selectedCampaigns.size === campaigns.length}
+              onCheckedChange={handleSelectAll}
+            />
+            <span className="text-sm text-gray-600">Seleccionar todas</span>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -303,6 +689,11 @@ export function CampaignsManagement() {
                 <div className="flex items-start justify-between">
                   {/* Información principal */}
                   <div className="flex gap-4 flex-1">
+                    <Checkbox
+                      checked={selectedCampaigns.has(campaign.id)}
+                      onCheckedChange={() => handleSelectCampaign(campaign.id)}
+                    />
+                    
                     {/* Imagen de la campaña */}
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
                       {campaign.images[0] ? (
@@ -340,7 +731,7 @@ export function CampaignsManagement() {
                         <span className="text-sm text-gray-600">
                           {getCreatorName(campaign.creator)}
                         </span>
-                        <Badge className={getTypeColor(campaign.creator.userType)}>
+                        <Badge variant="outline">
                           {campaign.creator.userType === 'INDIVIDUAL' ? 'Individual' : 'Organización'}
                         </Badge>
                       </div>
@@ -365,7 +756,7 @@ export function CampaignsManagement() {
                       </div>
 
                       {/* Badges y stats */}
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
                         <Badge className={getStatusColor(campaign.status)}>
                           {getStatusLabel(campaign.status)}
                         </Badge>
@@ -385,10 +776,13 @@ export function CampaignsManagement() {
                             Destacada
                           </Badge>
                         )}
+                        <Badge variant="outline">
+                          Urgencia: {campaign.urgencyLevel}
+                        </Badge>
                       </div>
 
                       {/* Stats */}
-                      <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span className="flex items-center gap-1">
                           <Eye className="w-4 h-4" />
                           {campaign.viewCount} vistas
@@ -407,20 +801,28 @@ export function CampaignsManagement() {
                   {/* Acciones */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        disabled={updating === campaign.id}
+                      >
+                        {updating === campaign.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MoreHorizontal className="h-4 w-4" />
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewCampaign(campaign.id)}>
                         <Eye className="mr-2 h-4 w-4" />
                         Ver detalles
                       </DropdownMenuItem>
                       
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditCampaign(campaign)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Editar
                       </DropdownMenuItem>
@@ -429,7 +831,11 @@ export function CampaignsManagement() {
                       
                       {campaign.status === 'ACTIVE' && (
                         <DropdownMenuItem
-                          onClick={() => handleCampaignUpdate(campaign.id, { status: 'PAUSED' })}
+                          onClick={() => {
+                            if (confirm('¿Estás seguro de que quieres pausar esta campaña? Los donantes no podrán hacer nuevas donaciones.')) {
+                              handleCampaignUpdate(campaign.id, { status: 'PAUSED' });
+                            }
+                          }}
                         >
                           <Pause className="mr-2 h-4 w-4" />
                           Pausar
@@ -462,7 +868,11 @@ export function CampaignsManagement() {
                       <DropdownMenuSeparator />
                       
                       <DropdownMenuItem
-                        onClick={() => handleCampaignUpdate(campaign.id, { status: 'CANCELLED' })}
+                        onClick={() => {
+                          if (confirm('¿Estás seguro de que quieres CANCELAR esta campaña? Esta acción es irreversible y se notificará a todos los donantes.')) {
+                            handleCampaignUpdate(campaign.id, { status: 'CANCELLED' });
+                          }
+                        }}
                         className="text-red-600"
                       >
                         <XCircle className="mr-2 h-4 w-4" />
@@ -517,6 +927,143 @@ export function CampaignsManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de detalles de campaña */}
+      <Dialog open={showCampaignDetails} onOpenChange={setShowCampaignDetails}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detalles de la Campaña</DialogTitle>
+            <DialogDescription>
+              Información completa y estadísticas de la campaña
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedCampaign && (
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Detalles</TabsTrigger>
+                <TabsTrigger value="stats">Estadísticas</TabsTrigger>
+                <TabsTrigger value="activity">Actividad</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="details" className="space-y-6 mt-6">
+                {/* Información básica de la campaña */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Información de la Campaña</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
+                          {selectedCampaign.images[0] ? (
+                            <img 
+                              src={selectedCampaign.images[0]} 
+                              alt={selectedCampaign.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              <Target className="w-8 h-8" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold">{selectedCampaign.title}</h3>
+                          <p className="text-gray-600">{selectedCampaign.category.name}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="font-medium text-gray-500">Estado:</span>
+                          <p>
+                            <Badge className={getStatusColor(selectedCampaign.status)}>
+                              {getStatusLabel(selectedCampaign.status)}
+                            </Badge>
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">Tipo:</span>
+                          <p>
+                            <Badge className={getTypeColor(selectedCampaign.type)}>
+                              {getTypeLabel(selectedCampaign.type)}
+                            </Badge>
+                          </p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">Objetivo:</span>
+                          <p>{formatCurrency(selectedCampaign.goalAmount)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">Recaudado:</span>
+                          <p>{formatCurrency(selectedCampaign.currentAmount)}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">Progreso:</span>
+                          <p>{calculateProgress(selectedCampaign.currentAmount, selectedCampaign.goalAmount).toFixed(1)}%</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-500">Urgencia:</span>
+                          <p>Nivel {selectedCampaign.urgencyLevel}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <span className="font-medium text-gray-500">Descripción:</span>
+                        <p className="text-sm mt-1">{selectedCampaign.description}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">Creador</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={selectedCampaign.creator.avatar} alt={getCreatorName(selectedCampaign.creator)} />
+                          <AvatarFallback className="text-lg">{getCreatorInitials(selectedCampaign.creator)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="text-xl font-semibold">{getCreatorName(selectedCampaign.creator)}</h3>
+                          <p className="text-gray-600">
+                            {selectedCampaign.creator.userType === 'INDIVIDUAL' ? 'Individual' : 'Organización'}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="stats" className="mt-6">
+                <div className="text-center py-12 text-gray-500">
+                  Estadísticas detalladas (próximamente)
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="activity" className="mt-6">
+                <div className="text-center py-12 text-gray-500">
+                  Historial de actividad (próximamente)
+                </div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de edición de campaña */}
+      <CampaignEditModal
+        campaign={editingCampaign}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingCampaign(null);
+        }}
+        onSave={handleSaveCampaign}
+      />
     </div>
   );
 }

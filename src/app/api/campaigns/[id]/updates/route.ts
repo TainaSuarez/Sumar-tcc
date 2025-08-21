@@ -115,10 +115,19 @@ export async function POST(
       );
     }
 
+    // Determinar el tipo de actualización basado en los archivos
+    let updateType = UpdateType.TEXT_ONLY;
+    if (videos.length > 0) {
+      updateType = UpdateType.TEXT_VIDEO;
+    } else if (images.length > 0) {
+      updateType = UpdateType.TEXT_IMAGE;
+    }
+
     // Preparar datos para crear la actualización
     const updateData = {
       title: validationResult.data.title,
       content: validationResult.data.content,
+      type: updateType,
       isPublic: validationResult.data.isPublic,
       campaignId,
       authorId: session.user.id,

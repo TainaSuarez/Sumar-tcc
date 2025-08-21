@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Upload, X, Loader2, DollarSign } from 'lucide-react';
+import { Upload, X, Loader2, DollarSign, Plus, ImageIcon } from 'lucide-react';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,8 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [additionalImagePreviews, setAdditionalImagePreviews] = useState<string[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [shortDescriptionCount, setShortDescriptionCount] = useState(0);
 
   const form = useForm<CreateCampaignInput>({
@@ -43,19 +45,20 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
       shortDescription: '',
       description: '',
       coverImage: undefined,
+      additionalImages: [],
     },
   });
 
-  // Cargar categorías desde la API
+  // Cargar categorías desde la API pública
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
+          setCategories(data.categories || []);
         } else {
-          console.error('Error al cargar categorías');
+          console.error('Error al cargar categorías:', response.status, response.statusText);
         }
       } catch (error) {
         console.error('Error al cargar categorías:', error);
@@ -110,6 +113,80 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
     if (fileInput) {
       fileInput.value = '';
     }
+  };
+
+  // Manejar subida de múltiples imágenes adicionales
+  const handleAdditionalImagesUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    // Validar número total de imágenes (incluyendo las existentes)
+    const currentImages = form.getValues('additionalImages') || [];
+    const totalImages = currentImages.length + files.length;
+    
+    if (totalImages > 8) {
+      console.error('No puedes agregar más de 8 imágenes adicionales');
+      return;
+    }
+
+    setUploadingImages(true);
+
+    try {
+      // Validar cada archivo
+      for (const file of files) {
+        if (!file.type.startsWith('image/')) {
+          console.error(`${file.name} no es una imagen válida`);
+          continue;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          console.error(`${file.name} es demasiado grande (máx. 5MB)`);
+          continue;
+        }
+      }
+
+      // Crear previews
+      const newPreviews: string[] = [];
+      const validFiles: File[] = [];
+
+      for (const file of files) {
+        if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+          const reader = new FileReader();
+          const previewPromise = new Promise<string>((resolve) => {
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+          });
+          
+          const preview = await previewPromise;
+          newPreviews.push(preview);
+          validFiles.push(file);
+        }
+      }
+
+      // Actualizar estados
+      setAdditionalImagePreviews(prev => [...prev, ...newPreviews]);
+      form.setValue('additionalImages', [...currentImages, ...validFiles]);
+
+    } catch (error) {
+      console.error('Error al procesar las imágenes:', error);
+    } finally {
+      setUploadingImages(false);
+      // Limpiar el input
+      event.target.value = '';
+    }
+  };
+
+  // Remover imagen adicional específica
+  const removeAdditionalImage = (index: number) => {
+    const currentImages = form.getValues('additionalImages') || [];
+    const currentPreviews = [...additionalImagePreviews];
+
+    // Remover de los arrays
+    currentImages.splice(index, 1);
+    currentPreviews.splice(index, 1);
+
+    // Actualizar estados
+    form.setValue('additionalImages', currentImages);
+    setAdditionalImagePreviews(currentPreviews);
   };
 
   const handleSubmit = (data: CreateCampaignInput) => {
@@ -346,6 +423,94 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                   </FormControl>
                   <FormDescription>
                     Una imagen atractiva ayuda a captar la atención de los donantes
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Imágenes Adicionales */}
+            <FormField
+              control={form.control}
+              name="additionalImages"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Imágenes adicionales (opcional)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      {/* Grid de imágenes existentes */}
+                      {additionalImagePreviews.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {additionalImagePreviews.map((preview, index) => (
+                            <div key={index} className="relative group">
+                              <div className="relative aspect-square w-full overflow-hidden rounded-lg border-2 border-gray-200">
+                                <Image
+                                  src={preview}
+                                  alt={`Imagen adicional ${index + 1}`}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => removeAdditionalImage(index)}
+                                disabled={isFormDisabled}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Botón para agregar más imágenes */}
+                      {additionalImagePreviews.length < 8 && (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-emerald-500 transition-colors">
+                          <label htmlFor="additionalImages" className="cursor-pointer">
+                            <div className="flex flex-col items-center">
+                              {uploadingImages ? (
+                                <>
+                                  <Loader2 className="h-8 w-8 text-gray-400 animate-spin" />
+                                  <span className="mt-2 text-sm text-gray-600">
+                                    Procesando imágenes...
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-lg mb-2">
+                                    <Plus className="h-6 w-6 text-gray-400" />
+                                  </div>
+                                  <span className="text-sm font-medium text-gray-900">
+                                    Agregar más imágenes
+                                  </span>
+                                  <span className="text-xs text-gray-600 mt-1">
+                                    Máximo 8 imágenes, 5MB cada una
+                                  </span>
+                                  <span className="text-xs text-emerald-600 mt-1">
+                                    {additionalImagePreviews.length}/8 imágenes
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </label>
+                          <input
+                            id="additionalImages"
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={handleAdditionalImagesUpload}
+                            disabled={isFormDisabled || uploadingImages}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Agrega hasta 8 imágenes adicionales para mostrar más detalles de tu proyecto
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

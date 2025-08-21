@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Search, Heart, Users, Calendar, MapPin } from 'lucide-react';
+import { Search, Heart, Users, Calendar, MapPin, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -82,7 +82,7 @@ export default function CampaignsPage() {
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
+          setCategories(data.categories || []);
         }
       } catch (error) {
         console.error('Error cargando categorías:', error);
@@ -189,56 +189,65 @@ export default function CampaignsPage() {
               Cada donación cuenta y puede marcar la diferencia.
             </p>
           </div>
+        </div>
+      </div>
 
-          {/* Búsqueda y filtros */}
-          <div className="mt-8 space-y-4">
-            {/* Barra de búsqueda */}
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5" />
+      {/* Sección de búsqueda */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+          {/* Búsqueda y filtros mejorados */}
+          <div className="space-y-6">
+            {/* Barra de búsqueda mejorada */}
+            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 group-focus-within:text-purple-500 transition-colors" />
                 <Input
                   type="text"
                   placeholder="Buscar campañas por título o descripción..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-12 border-purple-200 focus:border-purple-500 focus:ring-purple-500 bg-white"
+                  className="pl-12 pr-24 h-14 text-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500 bg-white rounded-xl shadow-sm"
                 />
                 <Button
                   type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-1.5 h-8"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 h-10 rounded-lg"
                 >
                   Buscar
                 </Button>
               </div>
             </form>
 
-            {/* Filtros por categoría */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
-              <Button
-                variant={selectedCategory === '' ? 'default' : 'outline'}
-                onClick={() => handleCategoryChange('')}
-                className={`${
-                  selectedCategory === ''
-                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                    : 'border-purple-200 text-purple-700 hover:bg-purple-50'
-                }`}
-              >
-                Todas las categorías
-              </Button>
-              {categories.map((category) => (
+            {/* Filtros por categoría mejorados */}
+            <div className="space-y-4">
+              <h3 className="text-center text-lg font-semibold text-gray-700">Filtrar por categoría</h3>
+              <div className="flex flex-wrap justify-center gap-3">
                 <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? 'default' : 'outline'}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`${
-                    selectedCategory === category.id
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                      : 'border-purple-200 text-purple-700 hover:bg-purple-50'
+                  variant={selectedCategory === '' ? 'default' : 'outline'}
+                  onClick={() => handleCategoryChange('')}
+                  className={`rounded-full px-6 py-2 transition-all duration-200 ${
+                    selectedCategory === ''
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg scale-105'
+                      : 'border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-200'
                   }`}
                 >
-                  {category.name}
+                  Todas las categorías
                 </Button>
-              ))}
+                {categories.map((category) => (
+                  <Button
+                    key={category.id}
+                    variant={selectedCategory === category.id ? 'default' : 'outline'}
+                    onClick={() => handleCategoryChange(category.id)}
+                    className={`rounded-full px-4 py-2 transition-all duration-200 ${
+                      selectedCategory === category.id
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg scale-105'
+                        : 'border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-200'
+                    }`}
+                  >
+{category.name}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -321,7 +330,8 @@ export default function CampaignsPage() {
                 Mostrando {campaigns.length} de {pagination.total} campañas
               </p>
               <Link href="/campaigns/create">
-                <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Button className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200">
+                  <Plus className="h-4 w-4 mr-2" />
                   Crear Campaña
                 </Button>
               </Link>
@@ -336,77 +346,103 @@ export default function CampaignsPage() {
 
                               return (
                 <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-purple-100 hover:border-purple-200">
+                    <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden">
                       {/* Imagen */}
-                      <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                      <div className="relative aspect-[4/3] overflow-hidden">
                         {campaign.images.length > 0 ? (
                           <Image
                             src={campaign.images[0]}
                             alt={campaign.title}
                             fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
                           />
                         ) : (
-                          <div className="w-full h-full bg-gradient-to-br from-purple-100 to-violet-100 flex items-center justify-center">
-                            <Heart className="h-12 w-12 text-purple-300" />
+                          <div className="w-full h-full bg-gradient-to-br from-purple-100 via-violet-50 to-purple-100 flex items-center justify-center">
+                            <Heart className="h-16 w-16 text-purple-400" />
                           </div>
                         )}
                         
+                        {/* Overlay gradiente */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                        
                         {/* Badges */}
-                        <div className="absolute top-3 left-3 flex gap-2">
+                        <div className="absolute top-4 left-4 flex gap-2">
                           {campaign.isFeatured && (
-                            <Badge className="bg-yellow-500 text-white">
+                            <Badge className="bg-yellow-500 text-white shadow-lg backdrop-blur-sm">
                               Destacada
                             </Badge>
                           )}
                           <Badge
-                            className={CampaignStatusColors[campaign.status as keyof typeof CampaignStatusColors]}
+                            className={`${CampaignStatusColors[campaign.status as keyof typeof CampaignStatusColors]} shadow-lg backdrop-blur-sm`}
                           >
                             {CampaignStatusLabels[campaign.status as keyof typeof CampaignStatusLabels]}
                           </Badge>
                         </div>
+                        
+                        {/* Corazón de favorito */}
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg">
+                            <Heart className="h-5 w-5 text-gray-600 hover:text-red-500 transition-colors" />
+                          </div>
+                        </div>
                       </div>
 
-                      <CardContent className="p-4 space-y-3">
+                      <CardContent className="p-6 space-y-4">
+                        {/* Categoría */}
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
+                            {campaign.category.name}
+                          </Badge>
+                        </div>
+
                         {/* Título */}
-                        <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                        <h3 className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors leading-tight">
                           {campaign.title}
                         </h3>
 
                         {/* Descripción */}
-                        <p className="text-sm text-gray-600 line-clamp-2">
+                        <p className="text-gray-600 line-clamp-3 leading-relaxed">
                           {campaign.shortDescription}
                         </p>
 
-                        {/* Progreso */}
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="font-semibold text-purple-700">
-                              {formatCurrency(campaign.currentAmount)}
-                            </span>
-                            <span className="text-gray-500">
-                              {progressPercentage.toFixed(0)}%
-                            </span>
+                        {/* Progreso mejorado */}
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <div className="text-2xl font-bold text-purple-600">
+                                {formatCurrency(campaign.currentAmount)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                de {formatCurrency(campaign.goalAmount)}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-gray-700">
+                                {progressPercentage.toFixed(0)}%
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                completado
+                              </div>
+                            </div>
                           </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          
+                          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                             <div
-                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-2 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${progressPercentage}%` }}
                             />
                           </div>
-                          <div className="text-xs text-gray-500">
-                            Objetivo: {formatCurrency(campaign.goalAmount)}
-                          </div>
                         </div>
 
-                        {/* Información adicional */}
-                        <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-purple-50">
-                          <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
-                            <span>{campaign.donationCount} donantes</span>
+                        {/* Información adicional mejorada */}
+                        <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-100">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-gray-400" />
+                            <span className="font-medium">{campaign.donationCount}</span>
+                            <span>donantes</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-gray-400" />
                             <span>{formatDate(campaign.createdAt)}</span>
                           </div>
                         </div>

@@ -39,11 +39,31 @@ export const createCampaignSchema = z.object({
       if (!file) return true;
       return file.type.startsWith('image/');
     }, 'El archivo debe ser una imagen válida'),
+  
+  additionalImages: z.array(z.any())
+    .optional()
+    .refine((files) => {
+      if (!files || files.length === 0) return true;
+      return files.every(file => file instanceof File);
+    }, 'Todos deben ser archivos válidos')
+    .refine((files) => {
+      if (!files || files.length === 0) return true;
+      return files.length <= 8; // Máximo 8 imágenes adicionales
+    }, 'Máximo 8 imágenes adicionales permitidas')
+    .refine((files) => {
+      if (!files || files.length === 0) return true;
+      return files.every(file => file.size <= 5 * 1024 * 1024);
+    }, 'Cada imagen debe ser menor a 5MB')
+    .refine((files) => {
+      if (!files || files.length === 0) return true;
+      return files.every(file => file.type.startsWith('image/'));
+    }, 'Todos los archivos deben ser imágenes válidas'),
 });
 
 // Esquema alternativo para uso en el backend donde coverImage puede ser string (URL)
 export const createCampaignBackendSchema = createCampaignSchema.extend({
   coverImage: z.string().url('URL de imagen inválida').optional(),
+  additionalImages: z.array(z.string().url('URL de imagen inválida')).optional(),
 });
 
 // Esquema para actualizar una campaña (todos los campos opcionales excepto ID)

@@ -78,6 +78,78 @@ export function getPublicImageUrl(filename: string): string {
   return `/uploads/campaigns/${filename}`;
 }
 
+// Función para manejar múltiples archivos de imagen
+export async function handleMultipleFileUpload(request: NextRequest): Promise<{
+  files: { filename: string; path: string; size: number; mimetype: string }[];
+  fields: Record<string, string>;
+  error?: string;
+}> {
+  try {
+    const formData = await request.formData();
+    const fields: Record<string, string> = {};
+    const files: { filename: string; path: string; size: number; mimetype: string }[] = [];
+
+    // Procesar FormData
+    for (const [key, value] of formData.entries()) {
+      if (typeof value === 'object' && value !== null && 'size' in value && 'type' in value && 'name' in value && value.size > 0) {
+        // Es un archivo
+        const uploadedFile = value as File;
+        
+        // Validar que es una imagen
+        if (!uploadedFile.type.startsWith('image/')) {
+          return { files: [], fields, error: `${uploadedFile.name}: Solo se permiten archivos de imagen` };
+        }
+
+        // Validar tamaño (máx. 5MB)
+        if (uploadedFile.size > 5 * 1024 * 1024) {
+          return { files: [], fields, error: `${uploadedFile.name}: La imagen debe ser menor a 5MB` };
+        }
+
+        // Validar tipos permitidos
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+        if (!allowedTypes.includes(uploadedFile.type)) {
+          return { files: [], fields, error: `${uploadedFile.name}: Solo se permiten imágenes JPEG, PNG o WEBP` };
+        }
+
+        // Generar nombre único
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(uploadedFile.name);
+        const filename = `campaign-${uniqueSuffix}${extension}`;
+        
+        // Asegurar que el directorio existe
+        const uploadPath = path.join(process.cwd(), 'public/uploads/campaigns');
+        try {
+          await fs.access(uploadPath);
+        } catch {
+          await fs.mkdir(uploadPath, { recursive: true });
+        }
+
+        // Guardar archivo
+        const fullPath = path.join(uploadPath, filename);
+        const buffer = Buffer.from(await uploadedFile.arrayBuffer());
+        await fs.writeFile(fullPath, buffer);
+
+        files.push({
+          filename,
+          path: fullPath,
+          size: uploadedFile.size,
+          mimetype: uploadedFile.type
+        });
+      } else if (typeof value === 'string') {
+        fields[key] = value;
+      }
+    }
+
+    return { files, fields };
+  } catch (error) {
+    return { 
+      files: [],
+      fields: {}, 
+      error: `Error al procesar archivos: ${error instanceof Error ? error.message : 'Error desconocido'}` 
+    };
+  }
+}
+
 // Función para eliminar un archivo
 export async function deleteUploadedFile(filename: string): Promise<void> {
   const filePath = path.join(process.cwd(), 'public/uploads/campaigns', filename);
@@ -86,4 +158,9 @@ export async function deleteUploadedFile(filename: string): Promise<void> {
   } catch (error) {
     console.error('Error al eliminar archivo:', error);
   }
+}
+
+// Función para eliminar múltiples archivos
+export async function deleteMultipleUploadedFiles(filenames: string[]): Promise<void> {
+  await Promise.all(filenames.map(filename => deleteUploadedFile(filename)));
 }

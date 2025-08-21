@@ -1,0 +1,58 @@
+/* Estilos para el carrusel de imágenes con zoom */
+
+.image-zoom-container {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  cursor: pointer;
+}
+
+.image-zoom-container:hover {
+  transform: scale(1.1);
+}
+
+.thumbnail-zoom-container {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+}
+
+.thumbnail-zoom-container:hover {
+  transform: scale(1.25);
+}
+
+.modal-zoom-container {
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+  cursor: zoom-in;
+}
+
+.modal-zoom-container:hover {
+  transform: scale(1.25);
+}
+
+/* Fallback con estilos más específicos */
+.carousel-main-image {
+  transition: all 0.5s ease-out !important;
+  transform-origin: center center !important;
+}
+
+.carousel-main-image:hover {
+  transform: scale(1.1) !important;
+}
+
+.carousel-thumbnail {
+  transition: all 0.3s ease-out !important;
+  transform-origin: center center !important;
+}
+
+.carousel-thumbnail:hover {
+  transform: scale(1.25) !important;
+}
+
+.carousel-modal-image {
+  transition: all 0.7s ease-out !important;
+  transform-origin: center center !important;
+}
+
+.carousel-modal-image:hover {
+  transform: scale(1.25) !important;
+}

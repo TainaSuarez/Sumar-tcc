@@ -5,7 +5,8 @@ import { z } from 'zod';
 import { authOptions } from '@/lib/auth';
 import { createCampaignSchema } from '@/lib/validations/campaign';
 import { CampaignService } from '@/lib/services/campaignService';
-import { handleFileUpload } from '@/lib/services/uploadService';
+import { handleMultipleFileUpload, getPublicImageUrl } from '@/lib/services/uploadService';
+import { CampaignStatus } from '@prisma/client';
 
 // Esquema para validar FormData
 const formDataSchema = z.object({
@@ -31,8 +32,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Manejar FormData y archivo con multer
-    const uploadResult = await handleFileUpload(request);
+    // Manejar FormData y múltiples archivos
+    const uploadResult = await handleMultipleFileUpload(request);
     
     if (uploadResult.error) {
       return NextResponse.json(
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { file, fields } = uploadResult;
+    const { files, fields } = uploadResult;
     
     // Validar campos básicos
     const validationResult = formDataSchema.safeParse({
@@ -53,10 +54,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!validationResult.success) {
-      // Limpiar archivo subido si hay error de validación
-      if (file) {
-        const { deleteUploadedFile } = await import('@/lib/services/uploadService');
-        await deleteUploadedFile(file.filename);
+      // Limpiar archivos subidos si hay error de validación
+      if (files.length > 0) {
+        const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
+        await deleteMultipleUploadedFiles(files.map(f => f.filename));
       }
       
       return NextResponse.json(
@@ -80,10 +81,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!category) {
-      // Limpiar archivo subido si hay error
-      if (file) {
-        const { deleteUploadedFile } = await import('@/lib/services/uploadService');
-        await deleteUploadedFile(file.filename);
+      // Limpiar archivos subidos si hay error
+      if (files.length > 0) {
+        const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
+        await deleteMultipleUploadedFiles(files.map(f => f.filename));
       }
       
       return NextResponse.json(
@@ -93,10 +94,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!category.isActive) {
-      // Limpiar archivo subido si hay error
-      if (file) {
-        const { deleteUploadedFile } = await import('@/lib/services/uploadService');
-        await deleteUploadedFile(file.filename);
+      // Limpiar archivos subidos si hay error
+      if (files.length > 0) {
+        const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
+        await deleteMultipleUploadedFiles(files.map(f => f.filename));
       }
       
       return NextResponse.json(
@@ -104,6 +105,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Preparar URLs de las imágenes
+    const imageUrls = files.map(file => getPublicImageUrl(file.filename));
 
     // Preparar datos para crear la campaña
     const campaignData = {
@@ -113,11 +117,11 @@ export async function POST(request: NextRequest) {
       shortDescription: fields.shortDescription,
       description: fields.description,
       creatorId: session.user.id,
-      imageFilename: file?.filename,
+      images: imageUrls,
     };
 
-    // Validar datos con el esquema completo (omitir coverImage ya que se maneja por separado)
-    const finalValidation = createCampaignSchema.omit({ coverImage: true }).safeParse({
+    // Validar datos con el esquema completo (omitir coverImage y additionalImages ya que se manejan por separado)
+    const finalValidation = createCampaignSchema.omit({ coverImage: true, additionalImages: true }).safeParse({
       title: campaignData.title,
       categoryId: campaignData.categoryId,
       goalAmount: campaignData.goalAmount,
@@ -126,10 +130,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (!finalValidation.success) {
-      // Limpiar archivo subido si hay error
-      if (file) {
-        const { deleteUploadedFile } = await import('@/lib/services/uploadService');
-        await deleteUploadedFile(file.filename);
+      // Limpiar archivos subidos si hay error
+      if (files.length > 0) {
+        const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
+        await deleteMultipleUploadedFiles(files.map(f => f.filename));
       }
       
       return NextResponse.json(
@@ -205,27 +209,19 @@ export async function GET(request: NextRequest) {
     const { prisma } = await import('@/lib/db');
 
     // Construir filtros
-    const where: {
-      status?: string;
-      categoryId?: string;
-      creatorId?: string;
-      OR?: Array<{
-        title?: { contains: string; mode: 'insensitive' };
-        shortDescription?: { contains: string; mode: 'insensitive' };
-      }>;
-    } = {};
+    const where: Record<string, unknown> = {};
 
     // Si no se especifica creatorId, solo mostrar campañas activas por defecto
     if (!creatorId) {
-      where.status = 'ACTIVE';
+      where.status = CampaignStatus.ACTIVE;
     }
 
     if (categoryId) {
       where.categoryId = categoryId;
     }
 
-    if (status) {
-      where.status = status;
+    if (status && Object.values(CampaignStatus).includes(status as CampaignStatus)) {
+      where.status = status as CampaignStatus;
     }
 
     if (creatorId) {

@@ -63,10 +63,15 @@ export class CampaignService {
       const baseSlug = generateSlug(data.title);
       const slug = await ensureUniqueSlug(baseSlug);
 
-      // Generar URL de imagen local si existe
-      let coverImageUrl: string | undefined;
-      if ('imageFilename' in data && data.imageFilename) {
-        coverImageUrl = getPublicImageUrl(data.imageFilename);
+      // Usar las imágenes proporcionadas o generar URL de imagen local si existe
+      let imageUrls: string[] = [];
+      
+      if ('images' in data && data.images) {
+        // Si se proporcionan URLs de imágenes directamente (múltiples imágenes)
+        imageUrls = data.images;
+      } else if ('imageFilename' in data && data.imageFilename) {
+        // Compatibilidad hacia atrás con una sola imagen
+        imageUrls = [getPublicImageUrl(data.imageFilename)];
       }
 
       // Crear campaña en la base de datos
@@ -80,7 +85,7 @@ export class CampaignService {
                   currency: 'EUR',
         type: CampaignType.DONATION, // Por defecto es donación
         status: CampaignStatus.ACTIVE, // Por defecto está activa
-          images: coverImageUrl ? [coverImageUrl] : [],
+          images: imageUrls,
           creatorId: data.creatorId,
           categoryId: data.categoryId,
           urgencyLevel: 1,

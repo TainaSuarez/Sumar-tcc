@@ -31,11 +31,17 @@ export async function GET(request: NextRequest) {
     const role = searchParams.get('role') || '';
     const userType = searchParams.get('userType') || '';
     const isActive = searchParams.get('isActive');
+    const isVerified = searchParams.get('isVerified');
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const dateFrom = searchParams.get('dateFrom');
+    const dateTo = searchParams.get('dateTo');
 
     const skip = (page - 1) * limit;
 
     // Construir filtros
-    const where: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: Record<string, any> = {};
 
     if (search) {
       where.OR = [
@@ -58,6 +64,21 @@ export async function GET(request: NextRequest) {
       where.isActive = isActive === 'true';
     }
 
+    if (isVerified !== null) {
+      where.isVerified = isVerified === 'true';
+    }
+
+    // Filtros de fecha
+    if (dateFrom || dateTo) {
+      where.createdAt = {};
+      if (dateFrom) {
+        where.createdAt.gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        where.createdAt.lte = new Date(dateTo);
+      }
+    }
+
     // Obtener usuarios con paginación
     const [users, totalCount] = await Promise.all([
       prisma.user.findMany({
@@ -71,7 +92,7 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { [sortBy]: sortOrder },
         skip,
         take: limit
       }),
@@ -217,6 +238,120 @@ export async function PATCH(request: NextRequest) {
 
   } catch (error) {
     console.error('Error al actualizar usuario:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Verificar autenticación
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar que el usuario sea administrador
+    if (session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: 'Acceso denegado. Se requieren permisos de administrador.' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { action, userIds, updates } = body;
+
+    if (!action || !userIds || !Array.isArray(userIds)) {
+      return NextResponse.json(
+        { error: 'Acción y IDs de usuarios requeridos' },
+        { status: 400 }
+      );
+    }
+
+    let result;
+    switch (action) {
+      case 'bulk_update':
+        if (!updates) {
+          return NextResponse.json(
+            { error: 'Actualizaciones requeridas para bulk_update' },
+            { status: 400 }
+          );
+        }
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: updates
+        });
+        break;
+      
+      case 'bulk_activate':
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { isActive: true }
+        });
+        break;
+      
+      case 'bulk_deactivate':
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { isActive: false }
+        });
+        break;
+      
+      case 'bulk_verify':
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { isVerified: true }
+        });
+        break;
+      
+      case 'bulk_unverify':
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { isVerified: false }
+        });
+        break;
+      
+      case 'bulk_make_moderator':
+        result = await prisma.user.updateMany({
+          where: { 
+            id: { in: userIds },
+            role: { not: UserRole.ADMIN }
+          },
+          data: { role: UserRole.MODERATOR }
+        });
+        break;
+      
+      case 'bulk_remove_moderator':
+        result = await prisma.user.updateMany({
+          where: { 
+            id: { in: userIds },
+            role: UserRole.MODERATOR
+          },
+          data: { role: UserRole.USER }
+        });
+        break;
+      
+      default:
+        return NextResponse.json(
+          { error: 'Acción no válida' },
+          { status: 400 }
+        );
+    }
+
+    return NextResponse.json({
+      message: `Acción ${action} ejecutada exitosamente`,
+      affectedRows: result.count
+    });
+
+  } catch (error) {
+    console.error('Error en acción masiva:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

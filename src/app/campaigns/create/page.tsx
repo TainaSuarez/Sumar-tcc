@@ -47,9 +47,16 @@ export default function CreateCampaignPage() {
       formData.append('shortDescription', data.shortDescription);
       formData.append('description', data.description);
       
-      // Agregar la imagen si existe
+      // Agregar la imagen de portada si existe
       if (data.coverImage) {
         formData.append('coverImage', data.coverImage);
+      }
+
+      // Agregar las imágenes adicionales si existen
+      if (data.additionalImages && data.additionalImages.length > 0) {
+        data.additionalImages.forEach((image, index) => {
+          formData.append(`additionalImage${index}`, image);
+        });
       }
 
       const response = await fetch('/api/campaigns', {

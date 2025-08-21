@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { UserRole } from '@prisma/client';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
           status: item.status,
           count: item._count
         })),
-        donationsByMonth: donationsByMonth as any[],
+        donationsByMonth: donationsByMonth as Array<{ month: string; count: number; total: number }>,
         topCategories: topCategories.map(cat => ({
           id: cat.id,
           name: cat.name,

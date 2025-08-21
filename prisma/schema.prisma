@@ -236,6 +236,11 @@ model Comment {
   author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
   campaignId String
   campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  
+  // Respuestas anidadas
+  parentId   String?
+  parent     Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("CommentReplies")
 
   @@map("comments")
 }

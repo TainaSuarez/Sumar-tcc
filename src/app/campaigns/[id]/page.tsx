@@ -1,11 +1,17 @@
 import { notFound } from 'next/navigation';
 import { getServerSession } from 'next-auth/next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 import { CampaignService } from '@/lib/services/campaignService';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 import { UpdatesTimeline } from '@/components/features/campaigns/UpdatesTimeline';
+import { CommentsSection } from '@/components/features/campaigns/CommentsSection';
+import { ImageCarousel } from '@/components/ui/image-carousel';
+import { Navbar } from '@/components/layout/navbar';
+import { Footer } from '@/components/layout/Footer';
 import { authOptions } from '@/lib/auth';
 
 interface CampaignDetailPageProps {
@@ -35,21 +41,57 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
     `${campaign.creator.firstName} ${campaign.creator.lastName || ''}`.trim();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <Navbar />
+      
+      {/* Contenido principal */}
+      <div className="py-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Botón de volver atrás */}
+          <div className="mb-6">
+            <Link href="/campaigns">
+              <Button 
+                variant="ghost" 
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 h-auto"
+              >
+                <ArrowLeft className="h-5 w-5 mr-2" />
+                Volver a las campañas
+              </Button>
+            </Link>
+          </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Imagen de portada */}
-            {campaign.images.length > 0 && (
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg">
-                <Image
-                  src={campaign.images[0]}
-                  alt={campaign.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
+            {/* Carrusel de imágenes */}
+            {campaign.images && campaign.images.length > 0 ? (
+              <ImageCarousel 
+                images={campaign.images} 
+                title={campaign.title}
+                className="w-full"
+              />
+            ) : (
+              /* Placeholder cuando no hay imágenes */
+              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <svg 
+                      className="w-8 h-8 text-gray-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                      />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium">Sin imágenes</p>
+                  <p className="text-xs mt-1">Esta campaña no tiene imágenes</p>
+                </div>
               </div>
             )}
 
@@ -189,7 +231,16 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             showPrivate={isOwner}
           />
         </div>
+
+        {/* Sección de comentarios */}
+        <div className="mt-12">
+          <CommentsSection campaignId={resolvedParams.id} />
+        </div>
+        </div>
       </div>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

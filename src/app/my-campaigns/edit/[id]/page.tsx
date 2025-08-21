@@ -80,7 +80,7 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
         const response = await fetch('/api/categories');
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
+          setCategories(data.categories || []);
         }
       } catch (error) {
         console.error('Error cargando categorías:', error);
