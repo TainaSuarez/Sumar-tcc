@@ -31,6 +31,7 @@ interface UpdateFormProps {
 }
 
 export function UpdateForm({
+  campaignId,
   initialData,
   onSubmit,
   onCancel,
@@ -179,6 +180,7 @@ export function UpdateForm({
       // Agregar campos de texto
       formData.append('title', data.title);
       formData.append('content', data.content);
+      formData.append('type', data.type);
       formData.append('isPublic', data.isPublic.toString());
 
       // Agregar imágenes

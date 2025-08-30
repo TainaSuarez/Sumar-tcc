@@ -28,6 +28,13 @@ export default function CreateUpdatePage({ params }: { params: Promise<{ id: str
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // Verificar autenticación
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname));
+    }
+  }, [status, router]);
+
   // Cargar datos de la campaña
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -79,7 +86,6 @@ export default function CreateUpdatePage({ params }: { params: Promise<{ id: str
   }
 
   if (status === 'unauthenticated') {
-    router.push('/auth/signin?callbackUrl=' + encodeURIComponent(window.location.pathname));
     return null;
   }
 

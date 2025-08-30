@@ -212,7 +212,7 @@ export function LoginForm({ callbackUrl = '/' }: LoginFormProps) {
           <Button
             variant="link"
             className="p-0 h-auto font-normal"
-            onClick={() => router.push('/auth/register')}
+            onClick={() => router.push('/auth/signup')}
           >
             Regístrate aquí
           </Button>

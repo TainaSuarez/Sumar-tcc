@@ -65,6 +65,11 @@ export async function POST(
 
     const { images, videos, fields } = uploadResult;
 
+    // Log para debug
+    console.log('Fields recibidos:', fields);
+    console.log('Images:', images.length);
+    console.log('Videos:', videos.length);
+
     // Validar campos básicos
     const validationResult = formDataSchema.safeParse({
       title: fields.title,
@@ -74,6 +79,8 @@ export async function POST(
     });
 
     if (!validationResult.success) {
+      console.error('Error de validación:', validationResult.error.issues);
+      
       // Limpiar archivos subidos si hay error de validación
       if (images.length > 0 || videos.length > 0) {
         const { cleanupUpdateFiles } = await import('@/lib/services/updateUploadService');

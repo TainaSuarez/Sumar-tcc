@@ -206,12 +206,12 @@ export function CategoriesManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Header con botón de crear */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Categorías ({categories.length})</h2>
-          <p className="text-gray-600">Gestiona las categorías y subcategorías del sistema</p>
+          <h2 className="text-xl font-bold">Categorías ({categories.length})</h2>
+          <p className="text-sm text-gray-600">Gestiona las categorías y subcategorías del sistema</p>
         </div>
         
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>

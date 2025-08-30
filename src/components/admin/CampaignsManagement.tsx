@@ -150,6 +150,9 @@ export function CampaignsManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([]);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [confirmationAction, setConfirmationAction] = useState<{ action: () => void, title: string, message: string } | null>(null);
+
 
   const fetchCampaigns = useCallback(async () => {
     try {
@@ -442,6 +445,19 @@ export function CampaignsManagement() {
     return Math.min((current / goal) * 100, 100);
   };
 
+  const handleRequestConfirmation = (action: () => void, title: string, message: string) => {
+    setConfirmationAction({ action, title, message });
+    setShowConfirmationModal(true);
+  };
+
+  const handleConfirm = () => {
+    if (confirmationAction) {
+      confirmationAction.action();
+      setShowConfirmationModal(false);
+      setConfirmationAction(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -714,9 +730,9 @@ export function CampaignsManagement() {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <h3 className="font-medium text-lg truncate">{campaign.title}</h3>
-                          <p className="text-sm text-gray-600 line-clamp-2">
+                          <div className="text-sm text-gray-600 line-clamp-2">
                             {campaign.shortDescription || campaign.description}
-                          </p>
+                          </div>
                         </div>
                       </div>
 
@@ -832,9 +848,11 @@ export function CampaignsManagement() {
                       {campaign.status === 'ACTIVE' && (
                         <DropdownMenuItem
                           onClick={() => {
-                            if (confirm('¿Estás seguro de que quieres pausar esta campaña? Los donantes no podrán hacer nuevas donaciones.')) {
-                              handleCampaignUpdate(campaign.id, { status: 'PAUSED' });
-                            }
+                            handleRequestConfirmation(
+                              () => handleCampaignUpdate(campaign.id, { status: 'PAUSED' }),
+                              'Pausar Campaña',
+                              '¿Estás seguro de que quieres pausar esta campaña? Los donantes no podrán hacer nuevas donaciones.'
+                            );
                           }}
                         >
                           <Pause className="mr-2 h-4 w-4" />
@@ -844,7 +862,13 @@ export function CampaignsManagement() {
                       
                       {(campaign.status === 'PAUSED' || campaign.status === 'DRAFT') && (
                         <DropdownMenuItem
-                          onClick={() => handleCampaignUpdate(campaign.id, { status: 'ACTIVE' })}
+                          onClick={() => {
+                            handleRequestConfirmation(
+                              () => handleCampaignUpdate(campaign.id, { status: 'ACTIVE' }),
+                              'Activar Campaña',
+                              '¿Estás seguro de que quieres activar esta campaña? Los donantes podrán hacer nuevas donaciones.'
+                            );
+                          }}
                         >
                           <Play className="mr-2 h-4 w-4" />
                           Activar
@@ -1064,6 +1088,24 @@ export function CampaignsManagement() {
         }}
         onSave={handleSaveCampaign}
       />
+
+      {/* Modal de confirmación */}
+      <Dialog open={showConfirmationModal} onOpenChange={setShowConfirmationModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{confirmationAction?.title}</DialogTitle>
+            <DialogDescription>
+              {confirmationAction?.message}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowConfirmationModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleConfirm}>Confirmar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

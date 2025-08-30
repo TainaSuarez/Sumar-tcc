@@ -1,5 +1,5 @@
 import path from 'path';
-import { NextRequest } from 'next/server';
+import { type NextRequest } from 'next/server';
 import { promises as fs } from 'fs';
 
 // Tipos permitidos
@@ -7,6 +7,13 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/avi"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 const MAX_VIDEO_SIZE = 10 * 1024 * 1024; // 10MB
+
+interface UploadedFile {
+  name: string;
+  size: number;
+  type: string;
+  arrayBuffer: () => Promise<ArrayBuffer>;
+}
 
 // Interfaz para archivos procesados
 interface ProcessedFile {
@@ -39,37 +46,38 @@ export async function handleUpdateFileUpload(request: NextRequest): Promise<{
 
     // Procesar FormData
     for (const [key, value] of formData.entries()) {
-      if (value instanceof File && value.size > 0) {
+      if (typeof value === 'object' && value.size > 0 && typeof value.name === 'string') {
+        const file = value as unknown as UploadedFile;
         // Determinar si es imagen o video
-        if (ACCEPTED_IMAGE_TYPES.includes(value.type)) {
+        if (ACCEPTED_IMAGE_TYPES.includes(file.type)) {
           // Validar tamaño de imagen
-          if (value.size > MAX_IMAGE_SIZE) {
+          if (file.size > MAX_IMAGE_SIZE) {
             return { 
               images, 
               videos, 
               fields, 
-              error: `La imagen "${value.name}" debe ser menor a ${MAX_IMAGE_SIZE / (1024 * 1024)}MB` 
+              error: `La imagen "${file.name}" debe ser menor a ${MAX_IMAGE_SIZE / (1024 * 1024)}MB` 
             };
           }
 
           // Procesar imagen
-          const imageFile = await processFile(value, imageUploadPath, 'update-image');
+          const imageFile = await processFile(file, imageUploadPath, 'update-image');
           if (imageFile) {
             images.push({ ...imageFile, type: 'image' });
           }
-        } else if (ACCEPTED_VIDEO_TYPES.includes(value.type)) {
+        } else if (ACCEPTED_VIDEO_TYPES.includes(file.type)) {
           // Validar tamaño de video
-          if (value.size > MAX_VIDEO_SIZE) {
+          if (file.size > MAX_VIDEO_SIZE) {
             return { 
               images, 
               videos, 
               fields, 
-              error: `El video "${value.name}" debe ser menor a ${MAX_VIDEO_SIZE / (1024 * 1024)}MB` 
+              error: `El video "${file.name}" debe ser menor a ${MAX_VIDEO_SIZE / (1024 * 1024)}MB` 
             };
           }
 
           // Procesar video
-          const videoFile = await processFile(value, videoUploadPath, 'update-video');
+          const videoFile = await processFile(file, videoUploadPath, 'update-video');
           if (videoFile) {
             videos.push({ ...videoFile, type: 'video' });
           }
@@ -78,7 +86,7 @@ export async function handleUpdateFileUpload(request: NextRequest): Promise<{
             images, 
             videos, 
             fields, 
-            error: `Tipo de archivo no soportado: ${value.type}. Solo se permiten imágenes (JPEG, PNG, WEBP) y videos (MP4, WEBM, OGG, AVI).` 
+            error: `Tipo de archivo no soportado: ${file.type}. Solo se permiten imágenes (JPEG, PNG, WEBP) y videos (MP4, WEBM, OGG, AVI).` 
           };
         }
       } else if (typeof value === 'string') {
@@ -99,7 +107,7 @@ export async function handleUpdateFileUpload(request: NextRequest): Promise<{
 
 // Función auxiliar para procesar un archivo individual
 async function processFile(
-  file: File, 
+  file: UploadedFile, 
   uploadPath: string, 
   prefix: string
 ): Promise<ProcessedFile | null> {

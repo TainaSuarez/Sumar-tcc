@@ -10,7 +10,7 @@ export default function AdminUsersPage() {
       title="Gestión de Usuarios" 
       subtitle="Administrar usuarios registrados en la plataforma"
     >
-      <Tabs defaultValue="management" className="space-y-6">
+      <Tabs defaultValue="management" className="space-y-3">
         <TabsList>
           <TabsTrigger value="management">Gestión de Usuarios</TabsTrigger>
           <TabsTrigger value="stats">Estadísticas</TabsTrigger>

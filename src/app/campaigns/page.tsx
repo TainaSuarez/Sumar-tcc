@@ -257,18 +257,31 @@ export default function CampaignsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Estado de carga */}
         {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <Card key={index} className="animate-pulse">
-                <div className="aspect-video bg-gray-200 rounded-t-lg" />
-                <CardContent className="p-4 space-y-3">
-                  <div className="h-4 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-full" />
-                  <div className="h-3 bg-gray-200 rounded w-2/3" />
-                  <div className="h-2 bg-gray-200 rounded w-full" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <Card key={index} className="animate-pulse h-full">
+                <div className="aspect-[16/10] bg-gray-200 rounded-t-lg" />
+                <CardContent className="p-8 space-y-5">
                   <div className="flex justify-between">
-                    <div className="h-3 bg-gray-200 rounded w-16" />
-                    <div className="h-3 bg-gray-200 rounded w-12" />
+                    <div className="h-6 bg-gray-200 rounded w-20" />
+                    <div className="h-4 bg-gray-200 rounded w-16" />
+                  </div>
+                  <div className="h-6 bg-gray-200 rounded w-3/4" />
+                  <div className="space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <div className="h-8 bg-gray-200 rounded w-24" />
+                      <div className="h-6 bg-gray-200 rounded w-12" />
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="flex justify-between">
+                      <div className="h-4 bg-gray-200 rounded w-16" />
+                      <div className="h-4 bg-gray-200 rounded w-20" />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -337,7 +350,7 @@ export default function CampaignsPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
               {campaigns.map((campaign) => {
                 const progressPercentage = getProgressPercentage(
                   campaign.currentAmount,
@@ -346,9 +359,9 @@ export default function CampaignsPage() {
 
                               return (
                 <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                    <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden">
-                      {/* Imagen */}
-                      <div className="relative aspect-[4/3] overflow-hidden">
+                    <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden h-full flex flex-col">
+                      {/* Imagen más grande */}
+                      <div className="relative aspect-[16/10] overflow-hidden">
                         {campaign.images.length > 0 ? (
                           <Image
                             src={campaign.images[0]}
@@ -387,37 +400,43 @@ export default function CampaignsPage() {
                         </div>
                       </div>
 
-                      <CardContent className="p-6 space-y-4">
-                        {/* Categoría */}
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200">
+                      <CardContent className="p-8 space-y-5 flex-1 flex flex-col">
+                        {/* Categoría y Creador */}
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
                             {campaign.category.name}
                           </Badge>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <MapPin className="h-3 w-3" />
+                            <span className="truncate max-w-24">{getCreatorName(campaign.creator)}</span>
+                          </div>
                         </div>
 
-                        {/* Título */}
-                        <h3 className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors leading-tight">
+                        {/* Título más grande */}
+                        <h3 className="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors leading-tight min-h-[3.5rem]">
                           {campaign.title}
                         </h3>
 
-                        {/* Descripción */}
-                        <p className="text-gray-600 line-clamp-3 leading-relaxed">
-                          {campaign.shortDescription}
-                        </p>
+                        {/* Descripción con altura fija */}
+                        <div className="flex-1">
+                          <p className="text-gray-600 line-clamp-4 leading-relaxed text-sm">
+                            {campaign.shortDescription}
+                          </p>
+                        </div>
 
                         {/* Progreso mejorado */}
-                        <div className="space-y-3">
+                        <div className="space-y-4 mt-auto">
                           <div className="flex justify-between items-end">
                             <div>
                               <div className="text-2xl font-bold text-purple-600">
                                 {formatCurrency(campaign.currentAmount)}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-sm text-gray-500">
                                 de {formatCurrency(campaign.goalAmount)}
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-lg font-semibold text-gray-700">
+                              <div className="text-xl font-semibold text-gray-700">
                                 {progressPercentage.toFixed(0)}%
                               </div>
                               <div className="text-xs text-gray-500">
@@ -426,36 +445,25 @@ export default function CampaignsPage() {
                             </div>
                           </div>
                           
-                          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+                          <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
                             <div
-                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-3 rounded-full transition-all duration-500 shadow-sm"
+                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-4 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${progressPercentage}%` }}
                             />
                           </div>
-                        </div>
 
-                        {/* Información adicional mejorada */}
-                        <div className="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-100">
-                          <div className="flex items-center gap-2">
-                            <Users className="h-4 w-4 text-gray-400" />
-                            <span className="font-medium">{campaign.donationCount}</span>
-                            <span>donantes</span>
+                          {/* Información adicional mejorada */}
+                          <div className="flex items-center justify-between text-sm text-gray-500 pt-2">
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4 text-purple-400" />
+                              <span className="font-medium">{campaign.donationCount}</span>
+                              <span>donantes</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4 text-purple-400" />
+                              <span>{formatDate(campaign.createdAt)}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-400" />
-                            <span>{formatDate(campaign.createdAt)}</span>
-                          </div>
-                        </div>
-
-                        {/* Creador y categoría */}
-                        <div className="flex items-center justify-between text-xs">
-                          <div className="flex items-center gap-1 text-purple-600">
-                            <MapPin className="h-3 w-3" />
-                            <span className="truncate">{getCreatorName(campaign.creator)}</span>
-                          </div>
-                          <Badge variant="outline" className="border-purple-200 text-purple-700 text-xs">
-                            {campaign.category.name}
-                          </Badge>
                         </div>
                       </CardContent>
                     </Card>

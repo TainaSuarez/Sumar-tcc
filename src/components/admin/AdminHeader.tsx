@@ -40,7 +40,7 @@ export function AdminHeader({ onToggleSidebar, title, subtitle }: AdminHeaderPro
   const userEmail = session?.user?.email || '';
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-1">
+    <header className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex items-center justify-between">
         {/* Lado izquierdo - Botón menú y título */}
         <div className="flex items-center gap-4">

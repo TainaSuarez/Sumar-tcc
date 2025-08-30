@@ -19,7 +19,7 @@ export default function AdminCampaignsPage() {
       title="Gestión de Campañas" 
       subtitle="Administrar campañas y su estado en la plataforma"
     >
-      <Tabs defaultValue="management" className="space-y-6">
+      <Tabs defaultValue="management" className="space-y-3">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="management">Gestión</TabsTrigger>
           <TabsTrigger value="quick-search">Búsqueda</TabsTrigger>
