@@ -25,15 +25,15 @@ export function Navbar() {
 
   return (
     <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+      <div className="w-full px-6 sm:px-8 lg:px-16">
+        <div className="flex justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center ml-4">
             <button
               onClick={() => router.push('/')}
-              className="flex items-center space-x-2 text-xl font-bold text-purple-600 hover:text-purple-700 transition-colors"
+              className="flex items-center space-x-2 text-2xl font-bold text-purple-600 hover:text-purple-700 transition-colors"
             >
-              <Heart className="h-6 w-6 fill-current" />
+              <Heart className="h-8 w-8 fill-current" />
               <span>Sumar+</span>
             </button>
           </div>
@@ -44,7 +44,7 @@ export function Navbar() {
               <button
                 key={item.name}
                 onClick={() => router.push(item.href)}
-                className="text-gray-700 hover:text-purple-600 px-3 py-2 text-sm font-medium transition-colors"
+                className="text-gray-700 hover:text-purple-600 px-3 py-2 text-base font-medium transition-colors"
               >
                 {item.name}
               </button>

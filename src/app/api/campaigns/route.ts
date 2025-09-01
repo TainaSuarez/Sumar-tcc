@@ -205,6 +205,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status');
   const search = searchParams.get('search');
   const creatorId = searchParams.get('creatorId');
+  const isFeatured = searchParams.get('isFeatured');
 
     const { prisma } = await import('@/lib/db');
 
@@ -226,6 +227,10 @@ export async function GET(request: NextRequest) {
 
     if (creatorId) {
       where.creatorId = creatorId;
+    }
+
+    if (isFeatured !== null) {
+      where.isFeatured = isFeatured === 'true';
     }
 
     if (search) {

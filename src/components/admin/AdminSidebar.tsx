@@ -84,7 +84,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
       {/* Sidebar */}
       <aside className={cn(
         "fixed left-0 top-0 z-50 h-full w-72 bg-white border-r border-gray-200 transition-transform duration-300",
-        "lg:translate-x-0 lg:static lg:z-auto",
+        "lg:translate-x-0 lg:fixed lg:z-auto",
         isOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         {/* Header */}
@@ -94,10 +94,10 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900">
                 Panel Admin
               </h1>
-              <p className="text-xs text-gray-500">Sumar+</p>
+              <p className="text-sm text-gray-500">Sumar+</p>
             </div>
           </div>
           
@@ -114,7 +114,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         {/* Navegación */}
         <nav className="p-4 space-y-2">
           {/* Link de regreso al sitio principal */}
-          <Link href="/" className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+          <Link href="/" className="flex items-center gap-3 px-3 py-2 text-base text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
             <Home className="w-4 h-4" />
             <span>Volver al sitio</span>
           </Link>
@@ -144,13 +144,13 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
                 
                 <div className="flex-1">
                   <div className={cn(
-                    "font-medium text-sm",
+                    "font-medium text-base",
                     isActive ? "text-blue-900" : "text-gray-900"
                   )}>
                     {item.label}
                   </div>
                   <div className={cn(
-                    "text-xs",
+                    "text-sm",
                     isActive ? "text-blue-600" : "text-gray-500"
                   )}>
                     {item.description}

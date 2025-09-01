@@ -4,6 +4,8 @@ import { Heart, Users, Target, Shield } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { authOptions } from '@/lib/auth';
+import { FeaturedCampaigns } from '@/components/features/FeaturedCampaigns';
+import { HeroCarousel } from '@/components/features/HeroCarousel';
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -12,53 +14,11 @@ export default async function Home() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-          <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Conectamos{' '}
-              <span className="text-purple-600">corazones generosos</span>
-              <br />
-              con causas que{' '}
-              <span className="text-violet-600">transforman vidas</span>
-            </h1>
-            
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Sumar+ es la plataforma donde cada donación cuenta. 
-              Únete a nuestra comunidad y haz la diferencia en la vida de quienes más lo necesitan.
-            </p>
+      {/* Hero Carousel Section */}
+      <HeroCarousel session={session} />
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {session ? (
-                <Button size="lg" className="text-lg px-8 py-3">
-                  <Heart className="mr-2 h-5 w-5" />
-                  Explorar Campañas
-                </Button>
-              ) : (
-                <>
-                  <Button size="lg" className="text-lg px-8 py-3">
-                    <Heart className="mr-2 h-5 w-5" />
-                    Comenzar a Donar
-                  </Button>
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-3">
-                    Crear Campaña
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {session && (
-              <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg max-w-md mx-auto">
-                <p className="text-purple-800">
-                  ¡Bienvenido de vuelta, {session.user?.name}! 
-                  Estás listo para hacer la diferencia.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
+      {/* Featured Campaigns Section */}
+      <FeaturedCampaigns limit={6} />
 
       {/* Features Section */}
       <section className="py-20 bg-white">

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Navbar } from '@/components/layout/navbar';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 
 interface Category {
@@ -177,6 +178,9 @@ export default function CampaignsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50">
+      {/* Navbar */}
+      <Navbar />
+      
       {/* Header */}
       <div className="bg-white border-b border-purple-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -219,32 +223,41 @@ export default function CampaignsPage() {
             </form>
 
             {/* Filtros por categoría mejorados */}
-            <div className="space-y-4">
-              <h3 className="text-center text-lg font-semibold text-gray-700">Filtrar por categoría</h3>
-              <div className="flex flex-wrap justify-center gap-3">
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Filtrar por categoría</h3>
+                <p className="text-gray-600">Encuentra campañas por área de interés</p>
+              </div>
+              
+              {/* Botón "Todas las categorías" destacado */}
+              <div className="flex justify-center mb-4">
                 <Button
                   variant={selectedCategory === '' ? 'default' : 'outline'}
                   onClick={() => handleCategoryChange('')}
-                  className={`rounded-full px-6 py-2 transition-all duration-200 ${
+                  className={`rounded-full px-8 py-3 text-base font-medium transition-all duration-200 ${
                     selectedCategory === ''
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg scale-105'
-                      : 'border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-200'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg transform scale-105'
+                      : 'border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
                   }`}
                 >
-                  Todas las categorías
+                  📋 Todas las categorías
                 </Button>
+              </div>
+              
+              {/* Grid de categorías organizadas */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-w-6xl mx-auto">
                 {categories.map((category) => (
                   <Button
                     key={category.id}
                     variant={selectedCategory === category.id ? 'default' : 'outline'}
                     onClick={() => handleCategoryChange(category.id)}
-                    className={`rounded-full px-4 py-2 transition-all duration-200 ${
+                    className={`h-auto py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex flex-col items-center gap-1 ${
                       selectedCategory === category.id
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg scale-105'
-                        : 'border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-200'
+                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg transform scale-105 border-2 border-purple-600'
+                        : 'border-2 border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700'
                     }`}
                   >
-{category.name}
+                    <span className="text-center leading-tight">{category.name}</span>
                   </Button>
                 ))}
               </div>

@@ -20,17 +20,17 @@ export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
       
       {/* Contenido principal */}
-      <div className="lg:ml-72 min-h-screen bg-white">
-        {/* Header integrado con contenido */}
-        <div className="px-6 pt-0 pb-0">
-          <div className="flex items-center justify-between mb-0">
-            {/* Lado izquierdo - Botón menú */}
-            <div className="flex items-center gap-3">
+      <div className="flex-1 lg:ml-72 min-h-screen bg-white">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center justify-between">
+            {/* Lado izquierdo - Botón menú y título */}
+            <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
@@ -39,27 +39,25 @@ export function AdminLayout({ children, title, subtitle }: AdminLayoutProps) {
               >
                 <Menu className="w-4 h-4" />
               </Button>
+              
+              {/* Título y subtítulo alineados */}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                {subtitle && (
+                  <p className="text-gray-600 text-sm">{subtitle}</p>
+                )}
+              </div>
             </div>
-
+            
             {/* Lado derecho - Usuario */}
-            <AdminUserDropdown />
-          </div>
-          
-          {/* Título principal como header */}
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {title}
-            </h1>
-            {subtitle && (
-              <p className="text-sm text-gray-600 mt-0">
-                {subtitle}
-              </p>
-            )}
+            <div>
+              <AdminUserDropdown />
+            </div>
           </div>
         </div>
         
-        {/* Contenido */}
-        <main className="px-6 pt-0 pb-6">
+        {/* Contenido principal */}
+          <main className="px-4 py-4">
           {children}
         </main>
       </div>

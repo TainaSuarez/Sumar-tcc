@@ -163,9 +163,9 @@ export function AdminDashboard() {
   if (!stats) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
       {/* Tarjetas de estadísticas principales */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
           title="Total de Usuarios"
           value={stats.overview.totalUsers}
