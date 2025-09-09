@@ -237,6 +237,11 @@ export async function GET(request: NextRequest) {
       where.OR = [
         { title: { contains: search, mode: 'insensitive' } },
         { shortDescription: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { category: { name: { contains: search, mode: 'insensitive' } } },
+        { creator: { firstName: { contains: search, mode: 'insensitive' } } },
+        { creator: { lastName: { contains: search, mode: 'insensitive' } } },
+        { creator: { organizationName: { contains: search, mode: 'insensitive' } } },
       ];
     }
 

@@ -56,28 +56,27 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   const [error, setError] = useState<string | null>(null);
   const [campaignId, setCampaignId] = useState<string>('');
 
-  // Resolve params
+  // Resolver params
   useEffect(() => {
     params.then(resolvedParams => {
       setCampaignId(resolvedParams.id);
     });
   }, [params]);
 
-  // Fetch campaign data
+  // Cargar datos de la campaña
   useEffect(() => {
-    if (!campaignId) return;
-
     const fetchCampaign = async () => {
+      if (!campaignId) return;
+      
       try {
-        setLoading(true);
         const response = await fetch(`/api/campaigns/${campaignId}`);
         if (!response.ok) {
-          throw new Error('Campaign not found');
+          throw new Error('Error al cargar la campaña');
         }
         const data = await response.json();
         setCampaign(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error loading campaign');
+        setError(err instanceof Error ? err.message : 'Error desconocido');
       } finally {
         setLoading(false);
       }
@@ -87,15 +86,15 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   }, [campaignId]);
 
   const handleEditUpdate = (update: CampaignUpdate) => {
-    router.push(`/campaigns/${campaignId}/updates/${update.id}/edit`);
+    // Lógica para editar actualización
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando campaña...</p>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando campaña...</p>
         </div>
       </div>
     );
@@ -105,11 +104,9 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Campaña no encontrada</h1>
-          <p className="text-gray-600 mb-4">{error || 'La campaña que buscas no existe.'}</p>
-          <Link href="/campaigns">
-            <Button>Volver a las campañas</Button>
-          </Link>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
+          <p className="text-gray-600 mb-4">{error || 'Campaña no encontrada'}</p>
+          <Button onClick={() => router.back()}>Volver</Button>
         </div>
       </div>
     );
@@ -127,12 +124,12 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Navbar */}
       <Navbar />
       
       {/* Contenido principal */}
       <div className="py-8">
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-14 2xl:px-16 max-w-screen-2xl mx-auto">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-none mx-auto">
           {/* Botón de volver atrás */}
           <div className="mb-6">
             <Link href="/campaigns">
@@ -145,186 +142,195 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               </Button>
             </Link>
           </div>
-        <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-8 xl:gap-10">
-          {/* Contenido principal */}
-          <div className="xl:col-span-3 lg:col-span-2 space-y-6">
-            {/* Carrusel de imágenes */}
-            {campaign.images && campaign.images.length > 0 ? (
-              <ImageCarousel 
-                images={campaign.images} 
-                title={campaign.title}
-                className="w-full max-w-4xl mx-auto"
-              />
-            ) : (
-              /* Placeholder cuando no hay imágenes */
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center">
-                <div className="text-center text-gray-500">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <svg 
-                      className="w-8 h-8 text-gray-400" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
-                      />
-                    </svg>
+          
+          <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-8 xl:gap-12">
+            {/* Contenido principal */}
+            <div className="xl:col-span-2 lg:col-span-2 space-y-6">
+              {/* Imagen de la campaña */}
+              {campaign.images && campaign.images.length > 0 ? (
+                <ImageCarousel 
+                  images={campaign.images} 
+                  title={campaign.title}
+                  className="w-full h-96 mb-32"
+                />
+              ) : (
+                /* Placeholder cuando no hay imágenes */
+                <div className="relative h-96 w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center mb-32">
+                  <div className="text-center text-gray-500">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
+                      <svg 
+                        className="w-8 h-8 text-gray-400" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-medium">Sin imágenes</p>
+                    <p className="text-xs mt-1">Esta campaña no tiene imágenes</p>
                   </div>
-                  <p className="text-sm font-medium">Sin imágenes</p>
-                  <p className="text-xs mt-1">Esta campaña no tiene imágenes</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Información principal */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-4xl font-bold text-gray-900">
+              {/* Información principal */}
+              <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+                <div className="flex items-start justify-between mb-6">
+                  <h1 className="text-4xl font-bold text-gray-900 flex-1 mr-6 leading-tight">
                     {campaign.title}
-                  </CardTitle>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      CampaignStatusColors[campaign.status]
-                    }`}
-                  >
-                    {CampaignStatusLabels[campaign.status]}
+                  </h1>
+                  <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
+                    Activo
                   </span>
                 </div>
-                <div className="flex items-center text-base text-gray-600">
+                
+                <div className="text-lg text-gray-600 mb-8">
                   <span>por {creatorName}</span>
-                  <span className="mx-2">•</span>
+                  <span className="mx-3">•</span>
                   <span>en {campaign.category.name}</span>
                 </div>
-              </CardHeader>
-              <CardContent>
+
                 {campaign.shortDescription && (
-                  <p className="text-xl text-gray-700 mb-6 leading-relaxed">
-                    {campaign.shortDescription}
-                  </p>
+                  <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                    <p className="text-xl text-gray-700 leading-relaxed">
+                      {campaign.shortDescription}
+                    </p>
+                  </div>
                 )}
                 
                 <div className="prose max-w-none">
-                  <h3 className="text-2xl font-semibold mb-4">Descripción del proyecto</h3>
-                  <div className="whitespace-pre-wrap text-gray-700 text-lg leading-relaxed">
+                  <h3 className="text-2xl font-semibold mb-6 text-gray-900">Descripción del proyecto</h3>
+                  <div className="whitespace-pre-wrap text-gray-700 text-lg leading-relaxed mb-4">
                     {campaign.description}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
 
-          {/* Sidebar de donación */}
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {/* Progreso */}
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-3xl font-bold text-gray-900">
-                        ${Number(campaign.currentAmount).toLocaleString()} UYU
-                      </span>
-                      <span className="text-base text-gray-600">
-                        {progressPercentage.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
-                      <div
-                        className="bg-emerald-600 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${progressPercentage}%` }}
-                      />
-                    </div>
-                    <p className="text-base text-gray-600">
-                      de ${Number(campaign.goalAmount).toLocaleString()} UYU objetivo
-                    </p>
-                  </div>
+              {/* Sección de actualizaciones */}
+              <div className="mt-8">
+                <UpdatesTimeline 
+                  campaignId={campaignId}
+                  isOwner={isOwner}
+                  showPrivate={isOwner}
+                  onEdit={handleEditUpdate}
+                />
+              </div>
 
-                  {/* Estadísticas */}
-                  <div className="grid grid-cols-2 gap-4 py-6 border-t border-b border-gray-200">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-900">0</div>
-                      <div className="text-base text-gray-600">Donantes</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-900">
-                        {Math.ceil((new Date().getTime() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
+              {/* Sección de comentarios */}
+              <div className="mt-8">
+                <CommentsSection campaignId={campaignId} />
+              </div>
+            </div>
+
+            {/* Sidebar de donación */}
+            <div className="space-y-8">
+              <Card className="overflow-hidden">
+                <CardContent className="p-8">
+                  <div className="space-y-8">
+                    {/* Progreso */}
+                    <div>
+                      <div className="mb-8">
+                        <div className="text-2xl font-semibold text-gray-700 mb-3">
+                          Recaudado
+                        </div>
+                        <div className="text-6xl font-bold text-gray-900 mb-4">
+                          {Number(campaign.currentAmount).toLocaleString()}€
+                        </div>
+                        <div className="text-xl text-gray-600 mb-6">
+                          Meta: {Number(campaign.goalAmount).toLocaleString()}€
+                        </div>
+                        <div className="text-3xl font-bold text-purple-600 mb-3">
+                          {progressPercentage.toFixed(0)}% completado
+                        </div>
+                        <div className="text-lg text-gray-600">
+                          {Math.ceil((new Date().getTime() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24))} días restantes
+                        </div>
                       </div>
-                      <div className="text-base text-gray-600">Días activa</div>
+                      <div className="w-full bg-gray-200 rounded-full h-6 mb-8">
+                        <div
+                          className="bg-purple-500 h-6 rounded-full transition-all duration-300"
+                          style={{ width: `${progressPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Estadísticas */}
+                    <div className="bg-gray-50 rounded-lg p-6 mb-8">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900 mb-1">$1 000</div>
+                          <div className="text-sm text-gray-600">Donación mínima</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900 mb-1">$5 000</div>
+                          <div className="text-sm text-gray-600">Donación media</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900 mb-1">$10 000</div>
+                          <div className="text-sm text-gray-600">Otra meta</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botón de donación */}
+                    {campaign.status === 'ACTIVE' && (
+                      <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-14 text-xl rounded-lg">
+                        Contribuir ahora
+                      </Button>
+                    )}
+
+                    {/* Compartir */}
+                    <div className="border-t border-gray-200 pt-8">
+                      <p className="text-lg font-medium text-gray-900 mb-6">Compartir esta campaña</p>
+                      <div className="grid grid-cols-1 gap-3">
+                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-blue-50 hover:border-blue-300">
+                          Facebook
+                        </Button>
+                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-sky-50 hover:border-sky-300">
+                          Twitter
+                        </Button>
+                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-gray-50 hover:border-gray-400">
+                          Copiar link
+                        </Button>
+                      </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {/* Botón de donación */}
-                  {campaign.status === 'ACTIVE' && (
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium h-12">
-                      Donar ahora
-                    </Button>
-                  )}
-
-                  {/* Compartir */}
-                  <div className="pt-4">
-                    <p className="text-base text-gray-600 mb-3">Compartir esta campaña:</p>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        Facebook
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        Twitter
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        Copiar link
-                      </Button>
+              {/* Información del creador */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-xl">Creado por</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <span className="text-emerald-600 font-semibold text-lg">
+                        {creatorName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-lg">{creatorName}</p>
+                      <p className="text-base text-gray-600">
+                        {campaign.creator.organizationName ? 'Organización' : 'Individuo'}
+                      </p>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Información del creador */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Creado por</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-                    <span className="text-emerald-600 font-semibold text-lg">
-                      {creatorName.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 text-lg">{creatorName}</p>
-                    <p className="text-base text-gray-600">
-                      {campaign.creator.organizationName ? 'Organización' : 'Individuo'}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
 
-        {/* Sección de actualizaciones */}
-        <div className="mt-12">
-          <UpdatesTimeline 
-            campaignId={campaignId}
-            isOwner={isOwner}
-            showPrivate={isOwner}
-            onEdit={handleEditUpdate}
-          />
-        </div>
 
-        {/* Sección de comentarios */}
-        <div className="mt-12">
-          <CommentsSection campaignId={campaignId} />
-        </div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <Footer />
     </div>

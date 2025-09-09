@@ -79,6 +79,7 @@ model User {
   campaignUpdates   CampaignUpdate[]
   notifications     Notification[]
   refreshTokens     RefreshToken[]
+  favorites         Favorite[]
 
   @@map("users")
 }
@@ -169,6 +170,7 @@ model Campaign {
   comments        Comment[]
   updates         CampaignUpdate[]
   tags            CampaignTag[]
+  favorites       Favorite[]
 
   @@map("campaigns")
 }
@@ -288,6 +290,21 @@ model Notification {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+// Modelo de Favoritos
+model Favorite {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  // Relaciones
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignId String
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, campaignId])
+  @@map("favorites")
 }
 
 // Modelo de Configuración del Sistema

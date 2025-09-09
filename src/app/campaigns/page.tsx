@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Heart, Users, Calendar, MapPin, Plus } from 'lucide-react';
@@ -9,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Navbar } from '@/components/layout/navbar';
+import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 
 interface Category {
@@ -58,15 +60,19 @@ interface CampaignsResponse {
 }
 
 export default function CampaignsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Filtros
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [currentPage, setCurrentPage] = useState(1);
+  // Filtros - inicializar con parámetros de URL
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('categoryId') || '');
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get('page') || '1'));
+  const [showCategories, setShowCategories] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -75,6 +81,17 @@ export default function CampaignsPage() {
     hasNext: false,
     hasPrev: false,
   });
+
+  // Sincronizar con parámetros de URL
+  useEffect(() => {
+    const urlSearchTerm = searchParams.get('search') || '';
+    const urlCategory = searchParams.get('categoryId') || '';
+    const urlPage = parseInt(searchParams.get('page') || '1');
+    
+    setSearchTerm(urlSearchTerm);
+    setSelectedCategory(urlCategory);
+    setCurrentPage(urlPage);
+  }, [searchParams]);
 
   // Cargar categorías
   useEffect(() => {
@@ -135,13 +152,44 @@ export default function CampaignsPage() {
   // Función para buscar
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setCurrentPage(1);
+    updateURL({ search: searchTerm, page: 1 });
   };
 
   // Función para cambiar categoría
   const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId === selectedCategory ? '' : categoryId);
-    setCurrentPage(1);
+    const newCategory = categoryId === selectedCategory ? '' : categoryId;
+    updateURL({ categoryId: newCategory, page: 1 });
+  };
+
+  // Función para actualizar URL
+  const updateURL = (updates: { search?: string; categoryId?: string; page?: number }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (updates.search !== undefined) {
+      if (updates.search.trim()) {
+        params.set('search', updates.search.trim());
+      } else {
+        params.delete('search');
+      }
+    }
+    
+    if (updates.categoryId !== undefined) {
+      if (updates.categoryId) {
+        params.set('categoryId', updates.categoryId);
+      } else {
+        params.delete('categoryId');
+      }
+    }
+    
+    if (updates.page !== undefined) {
+      if (updates.page > 1) {
+        params.set('page', updates.page.toString());
+      } else {
+        params.delete('page');
+      }
+    }
+    
+    router.push(`/campaigns?${params.toString()}`);
   };
 
   // Función para calcular porcentaje de progreso
@@ -196,81 +244,80 @@ export default function CampaignsPage() {
         </div>
       </div>
 
-      {/* Sección de búsqueda */}
-      <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-          {/* Búsqueda y filtros mejorados */}
+      {/* Filtros de categorías */}
+      <div className="bg-white border-b">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-6">
           <div className="space-y-6">
-            {/* Barra de búsqueda mejorada */}
-            <form onSubmit={handleSearch} className="max-w-3xl mx-auto">
-              <div className="relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 group-focus-within:text-purple-500 transition-colors" />
-                <Input
-                  type="text"
-                  placeholder="Buscar campañas por título o descripción..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 pr-24 h-14 text-lg border-gray-200 focus:border-purple-500 focus:ring-purple-500 bg-white rounded-xl shadow-sm"
-                />
-                <Button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 h-10 rounded-lg"
+            {/* Botón de categorías */}
+            <div className="max-w-md mx-auto relative">
+              <button
+                onClick={() => setShowCategories(!showCategories)}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-sm text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-gray-700 font-medium">
+                  {selectedCategory ? 
+                    categories.find(cat => cat.id === selectedCategory)?.name || 'Categorías' 
+                    : 'Categorías'
+                  }
+                </span>
+                <svg 
+                  className={`w-5 h-5 text-gray-400 transition-transform ${
+                    showCategories ? 'rotate-180' : ''
+                  }`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
                 >
-                  Buscar
-                </Button>
-              </div>
-            </form>
-
-            {/* Filtros por categoría mejorados */}
-            <div className="space-y-6">
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Filtrar por categoría</h3>
-                <p className="text-gray-600">Encuentra campañas por área de interés</p>
-              </div>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
               
-              {/* Botón "Todas las categorías" destacado */}
-              <div className="flex justify-center mb-4">
-                <Button
-                  variant={selectedCategory === '' ? 'default' : 'outline'}
-                  onClick={() => handleCategoryChange('')}
-                  className={`rounded-full px-8 py-3 text-base font-medium transition-all duration-200 ${
-                    selectedCategory === ''
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg transform scale-105'
-                      : 'border-2 border-purple-200 text-purple-700 hover:bg-purple-50 hover:border-purple-300'
-                  }`}
-                >
-                  📋 Todas las categorías
-                </Button>
-              </div>
-              
-              {/* Grid de categorías organizadas */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 max-w-6xl mx-auto">
-                {categories.map((category) => (
-                  <Button
-                    key={category.id}
-                    variant={selectedCategory === category.id ? 'default' : 'outline'}
-                    onClick={() => handleCategoryChange(category.id)}
-                    className={`h-auto py-3 px-4 text-sm font-medium rounded-lg transition-all duration-200 flex flex-col items-center gap-1 ${
-                      selectedCategory === category.id
-                        ? 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg transform scale-105 border-2 border-purple-600'
-                        : 'border-2 border-gray-200 text-gray-700 hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700'
+              {/* Lista desplegable de categorías */}
+              {showCategories && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-10">
+                  <button
+                    onClick={() => {
+                      setSelectedCategory('')
+                      setShowCategories(false)
+                    }}
+                    className={`w-full px-4 py-3 text-left border-b border-gray-200 transition-colors ${
+                      selectedCategory === ''
+                        ? 'bg-purple-50 text-purple-700 font-medium'
+                        : 'text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    <span className="text-center leading-tight">{category.name}</span>
-                  </Button>
-                ))}
-              </div>
+                    Todas las categorías
+                  </button>
+                  {categories.map((category, index) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategory(category.id)
+                        setShowCategories(false)
+                      }}
+                      className={`w-full px-4 py-3 text-left transition-colors ${
+                        index === categories.length - 1 ? '' : 'border-b border-gray-200'
+                      } ${
+                        selectedCategory === category.id
+                          ? 'bg-purple-50 text-purple-700 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {category.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-8">
         {/* Estado de carga */}
         {loading && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
             {Array.from({ length: 6 }).map((_, index) => (
               <Card key={index} className="animate-pulse h-full">
                 <div className="aspect-[16/10] bg-gray-200 rounded-t-lg" />
@@ -334,9 +381,7 @@ export default function CampaignsPage() {
               {(searchTerm || selectedCategory) && (
                 <Button
                   onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('');
-                    setCurrentPage(1);
+                    updateURL({ search: '', categoryId: '', page: 1 });
                   }}
                   variant="outline"
                   className="border-purple-200 text-purple-700 hover:bg-purple-50"
@@ -363,15 +408,15 @@ export default function CampaignsPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
               {campaigns.map((campaign) => {
                 const progressPercentage = getProgressPercentage(
                   campaign.currentAmount,
                   campaign.goalAmount
                 );
 
-                              return (
-                <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
+                return (
+                  <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
                     <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden h-full flex flex-col">
                       {/* Imagen más grande */}
                       <div className="relative aspect-[16/10] overflow-hidden">
@@ -405,10 +450,15 @@ export default function CampaignsPage() {
                           </Badge>
                         </div>
                         
-                        {/* Corazón de favorito */}
+                        {/* Botón de favorito funcional */}
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg">
-                            <Heart className="h-5 w-5 text-gray-600 hover:text-red-500 transition-colors" />
+                          <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-lg">
+                            <FavoriteButton 
+                              campaignId={campaign.id} 
+                              size="sm" 
+                              variant="ghost"
+                              className="hover:bg-white/50"
+                            />
                           </div>
                         </div>
                       </div>
@@ -491,7 +541,7 @@ export default function CampaignsPage() {
                 <Button
                   variant="outline"
                   disabled={!pagination.hasPrev}
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={() => updateURL({ page: currentPage - 1 })}
                   className="border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50"
                 >
                   Anterior
@@ -510,7 +560,7 @@ export default function CampaignsPage() {
                       )}
                       <Button
                         variant={page === pagination.page ? 'default' : 'outline'}
-                        onClick={() => setCurrentPage(page)}
+                        onClick={() => updateURL({ page })}
                         className={`w-10 h-10 ${
                           page === pagination.page
                             ? 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -525,7 +575,7 @@ export default function CampaignsPage() {
                 <Button
                   variant="outline"
                   disabled={!pagination.hasNext}
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={() => updateURL({ page: currentPage + 1 })}
                   className="border-purple-200 text-purple-700 hover:bg-purple-50 disabled:opacity-50"
                 >
                   Siguiente

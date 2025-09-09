@@ -8,10 +8,10 @@ export function Footer() {
 
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Logo y descripción */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <Heart className="h-8 w-8 fill-current text-purple-400" />
               <span className="text-2xl font-bold">Sumar+</span>
@@ -54,7 +54,7 @@ export function Footer() {
 
           {/* Enlaces rápidos */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Enlaces rápidos</h3>
+            <h3 className="text-lg font-semibold mb-3">Enlaces rápidos</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-gray-300 hover:text-white transition-colors">
@@ -86,7 +86,7 @@ export function Footer() {
 
           {/* Soporte */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Soporte</h3>
+            <h3 className="text-lg font-semibold mb-3">Soporte</h3>
             <ul className="space-y-2">
               <li>
                 <Link href="/help" className="text-gray-300 hover:text-white transition-colors">
@@ -113,8 +113,8 @@ export function Footer() {
 
           {/* Contacto */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Contacto</h3>
-            <ul className="space-y-3">
+            <h3 className="text-lg font-semibold mb-3">Contacto</h3>
+            <ul className="space-y-2">
               <li className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-purple-400 flex-shrink-0" />
                 <span className="text-gray-300 text-sm">info@sumarmas.com</span>
@@ -135,7 +135,7 @@ export function Footer() {
         </div>
 
         {/* Línea divisora */}
-        <div className="border-t border-gray-800 mt-8 pt-8">
+        <div className="border-t border-gray-800 mt-6 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
               © {currentYear} Sumar+. Todos los derechos reservados.

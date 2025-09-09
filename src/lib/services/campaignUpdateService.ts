@@ -273,58 +273,39 @@ export class CampaignUpdateService {
       // Preparar datos de actualización
       const updateData: Record<string, unknown> = { ...data };
 
-      // Procesar archivos si existen
+      // Procesar archivos nuevos si existen
       if (files) {
-        // Separar archivos existentes de nuevos
-        const existingImages = files.images.filter(img => img.isExisting);
-        const newImages = files.images.filter(img => !img.isExisting);
-        const existingVideos = files.videos.filter(vid => vid.isExisting);
-        const newVideos = files.videos.filter(vid => !vid.isExisting);
-
-        // Identificar archivos a eliminar (los que estaban pero ya no están en existingImages/existingVideos)
+        // Eliminar archivos antiguos
         const oldImages = existingUpdate.images;
         const oldVideos = existingUpdate.videos;
-        
-        const existingImageUrls = existingImages.map(img => getPublicUpdateImageUrl(img.filename));
-        const existingVideoUrls = existingVideos.map(vid => getPublicUpdateVideoUrl(vid.filename));
 
-        // Eliminar archivos que ya no se necesitan
         for (const imageUrl of oldImages) {
-          if (!existingImageUrls.includes(imageUrl)) {
-            const filename = imageUrl.split('/').pop();
-            if (filename) {
-              await deleteUpdateFile(filename, 'image');
-            }
+          const filename = imageUrl.split('/').pop();
+          if (filename) {
+            await deleteUpdateFile(filename, 'image');
           }
         }
 
         for (const videoUrl of oldVideos) {
-          if (!existingVideoUrls.includes(videoUrl)) {
-            const filename = videoUrl.split('/').pop();
-            if (filename) {
-              await deleteUpdateFile(filename, 'video');
-            }
+          const filename = videoUrl.split('/').pop();
+          if (filename) {
+            await deleteUpdateFile(filename, 'video');
           }
         }
 
-        // Combinar URLs existentes con nuevas
-        const allImageUrls = [
-          ...existingImageUrls,
-          ...newImages.map(img => getPublicUpdateImageUrl(img.filename))
-        ];
-        
-        const allVideoUrls = [
-          ...existingVideoUrls,
-          ...newVideos.map(vid => getPublicUpdateVideoUrl(vid.filename))
-        ];
+        // Agregar nuevos archivos
+        if (files.images) {
+          updateData.images = files.images.map(img => getPublicUpdateImageUrl(img.filename));
+        }
 
-        updateData.images = allImageUrls;
-        updateData.videos = allVideoUrls;
+        if (files.videos) {
+          updateData.videos = files.videos.map(vid => getPublicUpdateVideoUrl(vid.filename));
+        }
 
         // Actualizar tipo basado en archivos
-        if (allVideoUrls.length > 0) {
+        if (updateData.videos && updateData.videos.length > 0) {
           updateData.type = UpdateType.TEXT_VIDEO;
-        } else if (allImageUrls.length > 0) {
+        } else if (updateData.images && updateData.images.length > 0) {
           updateData.type = UpdateType.TEXT_IMAGE;
         } else {
           updateData.type = UpdateType.TEXT_ONLY;
