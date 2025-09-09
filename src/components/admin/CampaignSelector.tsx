@@ -203,9 +203,9 @@ export function CampaignSelector({
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-UY', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'UYU',
       minimumFractionDigits: 0
     }).format(amount);
   };

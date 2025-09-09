@@ -128,7 +128,7 @@ export default function MyCampaignsPage() {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'UYU',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);

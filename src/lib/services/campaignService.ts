@@ -82,7 +82,7 @@ export class CampaignService {
           description: data.description,
           shortDescription: data.shortDescription,
           goalAmount: data.goalAmount,
-                  currency: 'EUR',
+                  currency: 'UYU',
         type: CampaignType.DONATION, // Por defecto es donación
         status: CampaignStatus.ACTIVE, // Por defecto está activa
           images: imageUrls,

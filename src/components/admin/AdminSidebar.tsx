@@ -10,8 +10,6 @@ import {
   FolderOpen,
   Tag,
   CreditCard,
-  Settings,
-  Shield,
   Menu,
   X,
   Home
@@ -53,18 +51,6 @@ const menuItems = [
     href: '/admin/donations',
     icon: CreditCard,
     description: 'Historial de donaciones'
-  },
-  {
-    label: 'Moderación',
-    href: '/admin/moderation',
-    icon: Shield,
-    description: 'Herramientas de moderación'
-  },
-  {
-    label: 'Configuración',
-    href: '/admin/settings',
-    icon: Settings,
-    description: 'Configuración del sistema'
   }
 ];
 
@@ -91,7 +77,7 @@ export function AdminSidebar({ isOpen, onToggle }: AdminSidebarProps) {
         <div className="flex items-center justify-between px-4 py-1 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
+              <Home className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">

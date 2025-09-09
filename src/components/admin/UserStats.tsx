@@ -312,7 +312,7 @@ export function UserStats() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm font-medium">€{user.totalDonated.toLocaleString()}</div>
+                    <div className="text-sm font-medium">${user.totalDonated.toLocaleString()} UYU</div>
                     <div className="text-xs text-gray-500">{user.donationCount} donaciones</div>
                   </div>
                 </div>

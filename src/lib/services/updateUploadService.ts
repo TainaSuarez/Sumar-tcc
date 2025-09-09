@@ -146,12 +146,12 @@ async function ensureDirectoryExists(dirPath: string): Promise<void> {
 
 // Función para obtener la URL pública de una imagen de actualización
 export function getPublicUpdateImageUrl(filename: string): string {
-  return `/uploads/updates/images/${filename}`;
+  return `/api/uploads/updates/images/${filename}`;
 }
 
 // Función para obtener la URL pública de un video de actualización
 export function getPublicUpdateVideoUrl(filename: string): string {
-  return `/uploads/updates/videos/${filename}`;
+  return `/api/uploads/updates/videos/${filename}`;
 }
 
 // Función para eliminar archivos de actualización

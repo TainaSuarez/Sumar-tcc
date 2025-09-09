@@ -1,8 +1,8 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   images: {
     domains: ['localhost'],
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'http',
@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
         pathname: '/uploads/**',
       },
     ],
-    unoptimized: false,
   },
+  serverExternalPackages: ['@prisma/client'],
 };
 
-export default nextConfig;
+module.exports = nextConfig;

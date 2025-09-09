@@ -14,12 +14,14 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  MessageCircle
+  MessageCircle,
+  Plus
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import { 
   UpdateType, 
   UpdateTypeLabels, 
@@ -178,17 +180,41 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleImages.map((imageUrl, index) => (
                   <div key={index} className="relative group">
+                    <div className="mb-2 p-2 bg-gray-100 rounded text-xs font-mono">
+                      URL: {imageUrl}
+                    </div>
                     <Image
                       src={imageUrl}
                       alt={`Actualización ${update.title} - Imagen ${index + 1}`}
                       width={400}
                       height={300}
                       className="w-full h-48 object-cover rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
+                      unoptimized
+                      onError={(e) => {
+                        console.error('Error cargando imagen:', imageUrl);
+                        e.currentTarget.style.backgroundColor = '#f3f4f6';
+                        e.currentTarget.style.display = 'flex';
+                        e.currentTarget.style.alignItems = 'center';
+                        e.currentTarget.style.justifyContent = 'center';
+                        e.currentTarget.innerHTML = '<span style="color: #6b7280; font-size: 14px;">Error al cargar imagen</span>';
+                      }}
                       onClick={() => {
                         // TODO: Implementar modal de imagen
                         window.open(imageUrl, '_blank');
                       }}
                     />
+                    {/* Imagen de prueba para comparar */}
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-500 mb-1">Imagen de prueba (debería funcionar):</p>
+                      <Image
+                        src="/test-image.svg"
+                        alt="Imagen de prueba"
+                        width={200}
+                        height={150}
+                        className="w-32 h-24 object-cover rounded border"
+                        unoptimized
+                      />
+                    </div>
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
                   </div>
                 ))}
@@ -379,20 +405,44 @@ export function UpdatesTimeline({
 
   if (updates.length === 0) {
     return (
-      <Card className="text-center py-12">
-        <CardContent>
-          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No hay actualizaciones aún
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {isOwner 
-              ? 'Sé el primero en compartir una actualización sobre el progreso de tu campaña.'
-              : 'El creador de esta campaña aún no ha compartido actualizaciones.'
-            }
-          </p>
-        </CardContent>
-      </Card>
+      <div className="space-y-6">
+        {/* Título de la sección */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Actualizaciones de la campaña
+              </h2>
+              <p className="text-gray-600">
+                Sigue el progreso y los últimos desarrollos de esta campaña
+              </p>
+            </div>
+            {isOwner && (
+              <Link href={`/my-campaigns/${campaignId}/updates/create`}>
+                <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva Actualización
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+        
+        <Card className="text-center py-12">
+          <CardContent>
+            <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay actualizaciones aún
+            </h3>
+            <p className="text-gray-600 mb-4">
+              {isOwner 
+                ? 'Sé el primero en compartir una actualización sobre el progreso de tu campaña.'
+                : 'El creador de esta campaña aún no ha compartido actualizaciones.'
+              }
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -400,12 +450,24 @@ export function UpdatesTimeline({
     <div className="space-y-0">
       {/* Título de la sección */}
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Actualizaciones de la campaña
-        </h2>
-        <p className="text-gray-600">
-          Sigue el progreso y los últimos desarrollos de esta campaña
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Actualizaciones de la campaña
+            </h2>
+            <p className="text-gray-600">
+              Sigue el progreso y los últimos desarrollos de esta campaña
+            </p>
+          </div>
+          {isOwner && (
+            <Link href={`/my-campaigns/${campaignId}/updates/create`}>
+              <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Nueva Actualización
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Timeline de actualizaciones */}

@@ -139,7 +139,7 @@ export async function GET(
         id: item.id,
         type: 'donation',
         action: 'donated',
-        title: `Donó €${item.amount} a "${item.campaign.title}"`,
+        title: `Donó $${item.amount} UYU a "${item.campaign.title}"`,
         details: { status: item.status, campaignId: item.campaign.id },
         createdAt: item.createdAt,
         updatedAt: item.createdAt

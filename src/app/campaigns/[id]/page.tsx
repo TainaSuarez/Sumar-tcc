@@ -1,18 +1,46 @@
-import { notFound } from 'next/navigation';
-import { getServerSession } from 'next-auth/next';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { CampaignService } from '@/lib/services/campaignService';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 import { UpdatesTimeline } from '@/components/features/campaigns/UpdatesTimeline';
 import { CommentsSection } from '@/components/features/campaigns/CommentsSection';
 import { ImageCarousel } from '@/components/ui/image-carousel';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/Footer';
-import { authOptions } from '@/lib/auth';
+import type { CampaignUpdate } from '@/types/campaignUpdate';
+
+interface Campaign {
+  id: string;
+  title: string;
+  shortDescription: string;
+  description: string;
+  goalAmount: number;
+  currentAmount: number;
+  currency: string;
+  status: string;
+  images: string[];
+  category: {
+    id: string;
+    name: string;
+  };
+  creator: {
+    id: string;
+    firstName: string;
+    lastName: string | null;
+    organizationName: string | null;
+  };
+  donationCount: number;
+  isFeatured: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface CampaignDetailPageProps {
   params: Promise<{
@@ -20,16 +48,73 @@ interface CampaignDetailPageProps {
   }>;
 }
 
-export default async function CampaignDetailPage({ params }: CampaignDetailPageProps) {
-  const resolvedParams = await params;
-  const campaign = await CampaignService.getById(resolvedParams.id);
+export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [campaignId, setCampaignId] = useState<string>('');
 
-  if (!campaign) {
-    notFound();
+  // Resolve params
+  useEffect(() => {
+    params.then(resolvedParams => {
+      setCampaignId(resolvedParams.id);
+    });
+  }, [params]);
+
+  // Fetch campaign data
+  useEffect(() => {
+    if (!campaignId) return;
+
+    const fetchCampaign = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/campaigns/${campaignId}`);
+        if (!response.ok) {
+          throw new Error('Campaign not found');
+        }
+        const data = await response.json();
+        setCampaign(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Error loading campaign');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCampaign();
+  }, [campaignId]);
+
+  const handleEditUpdate = (update: CampaignUpdate) => {
+    router.push(`/campaigns/${campaignId}/updates/${update.id}/edit`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando campaña...</p>
+        </div>
+      </div>
+    );
   }
 
-  // Verificar si el usuario actual es el propietario de la campaña
-  const session = await getServerSession(authOptions);
+  if (error || !campaign) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Campaña no encontrada</h1>
+          <p className="text-gray-600 mb-4">{error || 'La campaña que buscas no existe.'}</p>
+          <Link href="/campaigns">
+            <Button>Volver a las campañas</Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const isOwner = session?.user?.id === campaign.creator.id;
 
   const progressPercentage = Math.min(
@@ -47,7 +132,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
       
       {/* Contenido principal */}
       <div className="py-8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-14 2xl:px-16 max-w-screen-2xl mx-auto">
           {/* Botón de volver atrás */}
           <div className="mb-6">
             <Link href="/campaigns">
@@ -60,15 +145,15 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
               </Button>
             </Link>
           </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-8 xl:gap-10">
           {/* Contenido principal */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-3 lg:col-span-2 space-y-6">
             {/* Carrusel de imágenes */}
             {campaign.images && campaign.images.length > 0 ? (
               <ImageCarousel 
                 images={campaign.images} 
                 title={campaign.title}
-                className="w-full"
+                className="w-full max-w-4xl mx-auto"
               />
             ) : (
               /* Placeholder cuando no hay imágenes */
@@ -99,7 +184,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-3xl font-bold text-gray-900">
+                  <CardTitle className="text-4xl font-bold text-gray-900">
                     {campaign.title}
                   </CardTitle>
                   <span
@@ -110,7 +195,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                     {CampaignStatusLabels[campaign.status]}
                   </span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex items-center text-base text-gray-600">
                   <span>por {creatorName}</span>
                   <span className="mx-2">•</span>
                   <span>en {campaign.category.name}</span>
@@ -118,14 +203,14 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
               </CardHeader>
               <CardContent>
                 {campaign.shortDescription && (
-                  <p className="text-lg text-gray-700 mb-6">
+                  <p className="text-xl text-gray-700 mb-6 leading-relaxed">
                     {campaign.shortDescription}
                   </p>
                 )}
                 
                 <div className="prose max-w-none">
-                  <h3 className="text-xl font-semibold mb-4">Descripción del proyecto</h3>
-                  <div className="whitespace-pre-wrap text-gray-700">
+                  <h3 className="text-2xl font-semibold mb-4">Descripción del proyecto</h3>
+                  <div className="whitespace-pre-wrap text-gray-700 text-lg leading-relaxed">
                     {campaign.description}
                   </div>
                 </div>
@@ -141,10 +226,10 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                   {/* Progreso */}
                   <div>
                     <div className="flex justify-between items-center mb-2">
-                      <span className="text-2xl font-bold text-gray-900">
-                        €{Number(campaign.currentAmount).toLocaleString()}
+                      <span className="text-3xl font-bold text-gray-900">
+                        ${Number(campaign.currentAmount).toLocaleString()} UYU
                       </span>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-base text-gray-600">
                         {progressPercentage.toFixed(1)}%
                       </span>
                     </div>
@@ -154,22 +239,22 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                         style={{ width: `${progressPercentage}%` }}
                       />
                     </div>
-                    <p className="text-sm text-gray-600">
-                      de €{Number(campaign.goalAmount).toLocaleString()} objetivo
+                    <p className="text-base text-gray-600">
+                      de ${Number(campaign.goalAmount).toLocaleString()} UYU objetivo
                     </p>
                   </div>
 
                   {/* Estadísticas */}
-                  <div className="grid grid-cols-2 gap-4 py-4 border-t border-b border-gray-200">
+                  <div className="grid grid-cols-2 gap-4 py-6 border-t border-b border-gray-200">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">0</div>
-                      <div className="text-sm text-gray-600">Donantes</div>
+                      <div className="text-3xl font-bold text-gray-900">0</div>
+                      <div className="text-base text-gray-600">Donantes</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-gray-900">
-                        {Math.ceil((new Date().getTime() - campaign.createdAt.getTime()) / (1000 * 60 * 60 * 24))}
+                      <div className="text-3xl font-bold text-gray-900">
+                        {Math.ceil((new Date().getTime() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24))}
                       </div>
-                      <div className="text-sm text-gray-600">Días activa</div>
+                      <div className="text-base text-gray-600">Días activa</div>
                     </div>
                   </div>
 
@@ -182,7 +267,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
 
                   {/* Compartir */}
                   <div className="pt-4">
-                    <p className="text-sm text-gray-600 mb-2">Compartir esta campaña:</p>
+                    <p className="text-base text-gray-600 mb-3">Compartir esta campaña:</p>
                     <div className="flex space-x-2">
                       <Button variant="outline" size="sm" className="flex-1">
                         Facebook
@@ -202,7 +287,7 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
             {/* Información del creador */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Creado por</CardTitle>
+                <CardTitle className="text-xl">Creado por</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center space-x-3">
@@ -212,8 +297,8 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
                     </span>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{creatorName}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-gray-900 text-lg">{creatorName}</p>
+                    <p className="text-base text-gray-600">
                       {campaign.creator.organizationName ? 'Organización' : 'Individuo'}
                     </p>
                   </div>
@@ -226,15 +311,16 @@ export default async function CampaignDetailPage({ params }: CampaignDetailPageP
         {/* Sección de actualizaciones */}
         <div className="mt-12">
           <UpdatesTimeline 
-            campaignId={resolvedParams.id}
+            campaignId={campaignId}
             isOwner={isOwner}
             showPrivate={isOwner}
+            onEdit={handleEditUpdate}
           />
         </div>
 
         {/* Sección de comentarios */}
         <div className="mt-12">
-          <CommentsSection campaignId={resolvedParams.id} />
+          <CommentsSection campaignId={campaignId} />
         </div>
         </div>
       </div>

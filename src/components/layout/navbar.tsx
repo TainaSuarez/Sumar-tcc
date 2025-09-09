@@ -20,7 +20,6 @@ export function Navbar() {
     { name: 'Inicio', href: '/' },
     { name: 'Campañas', href: '/campaigns' },
     { name: 'Cómo Funciona', href: '/how-it-works' },
-    { name: 'Contacto', href: '/contact' },
   ];
 
   return (

@@ -838,7 +838,7 @@ export function UsersManagement() {
                       </div>
                       <div className="text-center p-4 bg-orange-50 rounded-lg">
                         <div className="text-2xl font-bold text-orange-600">
-                          €{selectedUser.stats.campaigns?.totalRaised || 0}
+                          ${selectedUser.stats.campaigns?.totalRaised || 0} UYU
                         </div>
                         <div className="text-sm text-gray-600">Total recaudado</div>
                       </div>
@@ -864,7 +864,7 @@ export function UsersManagement() {
                             </p>
                           </div>
                           <div className="text-right text-sm">
-                            <p className="font-medium">€{campaign.currentAmount} / €{campaign.goalAmount}</p>
+                            <p className="font-medium">${campaign.currentAmount} / ${campaign.goalAmount} UYU</p>
                             <p className="text-gray-500">{new Date(campaign.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>
@@ -891,7 +891,7 @@ export function UsersManagement() {
                             </p>
                           </div>
                           <div className="text-right text-sm">
-                            <p className="font-medium">€{donation.amount}</p>
+                            <p className="font-medium">${donation.amount} UYU</p>
                             <p className="text-gray-500">{new Date(donation.createdAt).toLocaleDateString()}</p>
                           </div>
                         </div>

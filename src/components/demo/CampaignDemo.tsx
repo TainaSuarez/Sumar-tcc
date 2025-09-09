@@ -17,7 +17,7 @@ const mockCampaigns = [
     shortDescription: 'María necesita nuestra ayuda para costear su tratamiento contra el cáncer. Cada donación cuenta para darle una segunda oportunidad.',
     goalAmount: 15000,
     currentAmount: 8750,
-    currency: 'EUR',
+    currency: 'UYU',
     status: 'ACTIVE',
     images: ['/placeholder-medical.jpg'],
     category: { id: '1', name: 'Salud y Medicina' },
@@ -33,7 +33,7 @@ const mockCampaigns = [
     shortDescription: 'Una pequeña escuela en zona rural necesita libros, cuadernos y material didáctico para 50 niños.',
     goalAmount: 3000,
     currentAmount: 1200,
-    currency: 'EUR',
+    currency: 'UYU',
     status: 'ACTIVE',
     images: ['/placeholder-education.jpg'],
     category: { id: '2', name: 'Educación' },
@@ -49,7 +49,7 @@ const mockCampaigns = [
     shortDescription: 'Nuestro refugio alberga 80 perros y gatos rescatados. Necesitamos ayuda para alimentarlos y mantenerlos sanos.',
     goalAmount: 5000,
     currentAmount: 3200,
-    currency: 'EUR',
+    currency: 'UYU',
     status: 'ACTIVE',
     images: ['/placeholder-animals.jpg'],
     category: { id: '3', name: 'Animales y Mascotas' },
@@ -65,7 +65,7 @@ const mockCampaigns = [
     shortDescription: 'Ayúdanos a plantar 1000 árboles nativos para recuperar el ecosistema dañado por los incendios del verano.',
     goalAmount: 8000,
     currentAmount: 4500,
-    currency: 'EUR',
+    currency: 'UYU',
     status: 'ACTIVE',
     images: ['/placeholder-environment.jpg'],
     category: { id: '4', name: 'Medio Ambiente' },
@@ -92,9 +92,9 @@ export default function CampaignDemo() {
 
   // Función para formatear números
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-UY', {
       style: 'currency',
-      currency: 'EUR',
+      currency: 'UYU',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);

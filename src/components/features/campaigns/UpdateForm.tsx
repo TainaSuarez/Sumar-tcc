@@ -22,7 +22,11 @@ import {
 
 interface UpdateFormProps {
   campaignId: string;
-  initialData?: Partial<CreateCampaignUpdateInput & { id: string }>;
+  initialData?: Partial<CreateCampaignUpdateInput & { 
+    id: string;
+    existingImages?: string[];
+    existingVideos?: string[];
+  }>;
   onSubmit: (data: FormData) => Promise<void>;
   onCancel?: () => void;
   isLoading?: boolean;
@@ -43,6 +47,8 @@ export function UpdateForm({
   const [selectedVideos, setSelectedVideos] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>(initialData?.existingImages || []);
+  const [existingVideos, setExistingVideos] = useState<string[]>(initialData?.existingVideos || []);
   const [fileErrors, setFileErrors] = useState<string[]>([]);
 
   const form = useForm<CreateCampaignUpdateInput>({
@@ -172,6 +178,18 @@ export function UpdateForm({
     }
   };
 
+  // Remover imagen existente
+  const removeExistingImage = (index: number) => {
+    const newExistingImages = existingImages.filter((_, i) => i !== index);
+    setExistingImages(newExistingImages);
+  };
+
+  // Remover video existente
+  const removeExistingVideo = (index: number) => {
+    const newExistingVideos = existingVideos.filter((_, i) => i !== index);
+    setExistingVideos(newExistingVideos);
+  };
+
   // Manejar envío del formulario
   const handleFormSubmit = async (data: CreateCampaignUpdateInput) => {
     try {
@@ -192,6 +210,16 @@ export function UpdateForm({
       selectedVideos.forEach((video) => {
         formData.append('videos', video);
       });
+
+      // Agregar imágenes existentes que se mantienen
+      if (existingImages.length > 0) {
+        formData.append('existingImages', JSON.stringify(existingImages));
+      }
+
+      // Agregar videos existentes que se mantienen
+      if (existingVideos.length > 0) {
+        formData.append('existingVideos', JSON.stringify(existingVideos));
+      }
 
       await onSubmit(formData);
     } catch (error) {
@@ -317,28 +345,59 @@ export function UpdateForm({
                 </label>
               </div>
 
-              {/* Previews de imágenes */}
+              {/* Imágenes existentes */}
+              {existingImages.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Imágenes actuales:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {existingImages.map((imageUrl, index) => (
+                      <div key={`existing-${index}`} className="relative group">
+                        <Image
+                          src={imageUrl}
+                          alt={`Imagen existente ${index + 1}`}
+                          width={200}
+                          height={150}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          disabled={isLoading}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Previews de imágenes nuevas */}
               {imagePreviews.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {imagePreviews.map((preview, index) => (
-                    <div key={index} className="relative group">
-                      <Image
-                        src={preview}
-                        alt={`Preview ${index + 1}`}
-                        width={200}
-                        height={150}
-                        className="w-full h-32 object-cover rounded-lg border"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        disabled={isLoading}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Nuevas imágenes:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {imagePreviews.map((preview, index) => (
+                      <div key={index} className="relative group">
+                        <Image
+                          src={preview}
+                          alt={`Preview ${index + 1}`}
+                          width={200}
+                          height={150}
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          disabled={isLoading}
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

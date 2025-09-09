@@ -94,11 +94,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-gray-300 hover:text-white transition-colors">
-                  Contacto
-                </Link>
-              </li>
-              <li>
                 <Link href="/faq" className="text-gray-300 hover:text-white transition-colors">
                   Preguntas Frecuentes
                 </Link>

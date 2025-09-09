@@ -381,10 +381,10 @@ export default function EditCampaignPage({ params }: { params: Promise<{ id: str
                   name="goalAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Monto objetivo (EUR)</FormLabel>
+                      <FormLabel>Monto objetivo (UYU)</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">€</span>
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
                           <Input
                             type="number"
                             min="100"

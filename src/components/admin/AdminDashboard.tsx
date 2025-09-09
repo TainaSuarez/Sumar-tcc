@@ -116,9 +116,9 @@ export function AdminDashboard() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-UY', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'UYU'
     }).format(amount);
   };
 

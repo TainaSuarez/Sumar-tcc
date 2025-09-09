@@ -315,7 +315,7 @@ export function CampaignEditModal({ campaign, isOpen, onClose, onSave }: Campaig
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="goalAmount">Objetivo (€) *</Label>
+                  <Label htmlFor="goalAmount">Objetivo ($) *</Label>
                   <Input
                     id="goalAmount"
                     type="number"
@@ -633,7 +633,7 @@ export function CampaignEditModal({ campaign, isOpen, onClose, onSave }: Campaig
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <div className="text-2xl font-bold text-blue-600">
-                    €{campaign.currentAmount.toLocaleString()}
+                    ${campaign.currentAmount.toLocaleString()} UYU
                   </div>
                   <div className="text-sm text-gray-600">Recaudado</div>
                 </div>

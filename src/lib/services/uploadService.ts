@@ -75,7 +75,7 @@ export async function handleFileUpload(request: NextRequest): Promise<{
 
 // Función para obtener la URL pública de un archivo
 export function getPublicImageUrl(filename: string): string {
-  return `/uploads/campaigns/${filename}`;
+  return `/api/uploads/campaigns/${filename}`;
 }
 
 // Función para manejar múltiples archivos de imagen

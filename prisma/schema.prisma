@@ -142,7 +142,7 @@ model Campaign {
   images          String[]       // Array de URLs de imágenes
   goalAmount      Decimal        @db.Decimal(10, 2)
   currentAmount   Decimal        @default(0) @db.Decimal(10, 2)
-  currency        String         @default("EUR")
+  currency        String         @default("UYU")
   type            CampaignType
   status          CampaignStatus @default(DRAFT)
   startDate       DateTime?
@@ -202,7 +202,7 @@ model CampaignTag {
 model Donation {
   id              String         @id @default(cuid())
   amount          Decimal        @db.Decimal(10, 2)
-  currency        String         @default("EUR")
+  currency        String         @default("UYU")
   message         String?        // Mensaje del donante
   isAnonymous     Boolean        @default(false)
   paymentMethod   PaymentMethod

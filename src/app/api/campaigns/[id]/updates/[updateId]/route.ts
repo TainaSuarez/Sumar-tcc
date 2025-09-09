@@ -105,6 +105,10 @@ export async function PUT(
 
     const { images, videos, fields } = uploadResult;
 
+    // Obtener archivos existentes que se mantienen
+    const existingImages = fields.existingImages ? JSON.parse(fields.existingImages) : [];
+    const existingVideos = fields.existingVideos ? JSON.parse(fields.existingVideos) : [];
+
     // Validar campos básicos
     const validationResult = updateFormDataSchema.safeParse({
       title: fields.title,
@@ -131,23 +135,26 @@ export async function PUT(
       );
     }
 
-    // Validar límites de archivos
-    if (images.length > 5) {
+    // Validar límites de archivos (incluyendo existentes)
+    const totalImages = images.length + existingImages.length;
+    const totalVideos = videos.length + existingVideos.length;
+
+    if (totalImages > 5) {
       const { cleanupUpdateFiles } = await import('@/lib/services/updateUploadService');
       await cleanupUpdateFiles(images, videos);
 
       return NextResponse.json(
-        { error: 'No puedes subir más de 5 imágenes por actualización' },
+        { error: 'No puedes tener más de 5 imágenes por actualización' },
         { status: 400 }
       );
     }
 
-    if (videos.length > 1) {
+    if (totalVideos > 1) {
       const { cleanupUpdateFiles } = await import('@/lib/services/updateUploadService');
       await cleanupUpdateFiles(images, videos);
 
       return NextResponse.json(
-        { error: 'No puedes subir más de 1 video por actualización' },
+        { error: 'No puedes tener más de 1 video por actualización' },
         { status: 400 }
       );
     }
@@ -155,12 +162,21 @@ export async function PUT(
     // Preparar datos de actualización
     const updateData = validationResult.data;
 
-    // Preparar archivos procesados si existen
+    // Preparar archivos procesados (nuevos y existentes)
     let processedFiles;
-    if (images.length > 0 || videos.length > 0) {
+    const allImages = [
+      ...existingImages.map(url => ({ filename: url.split('/').pop() || '', type: 'image' as const, isExisting: true })),
+      ...images.map(img => ({ filename: img.filename, type: 'image' as const, isExisting: false }))
+    ];
+    const allVideos = [
+      ...existingVideos.map(url => ({ filename: url.split('/').pop() || '', type: 'video' as const, isExisting: true })),
+      ...videos.map(vid => ({ filename: vid.filename, type: 'video' as const, isExisting: false }))
+    ];
+
+    if (allImages.length > 0 || allVideos.length > 0) {
       processedFiles = {
-        images: images.map(img => ({ filename: img.filename, type: 'image' as const })),
-        videos: videos.map(vid => ({ filename: vid.filename, type: 'video' as const })),
+        images: allImages,
+        videos: allVideos,
       };
     }
 
