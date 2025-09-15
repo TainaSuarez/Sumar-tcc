@@ -209,6 +209,14 @@ model Donation {
   isAnonymous     Boolean        @default(false)
   paymentMethod   PaymentMethod
   paymentId       String?        // ID del pago en el proveedor (Stripe, PayPal, etc.)
+  
+  // Campos específicos de Stripe
+  stripePaymentIntentId String?  // ID del Payment Intent de Stripe
+  stripeClientSecret    String?  // Client secret para confirmar el pago
+  stripeChargeId        String?  // ID del charge una vez completado
+  stripeCustomerId      String?  // ID del customer en Stripe (opcional)
+  stripeMetadata        Json?    // Metadata adicional de Stripe
+  
   status          DonationStatus @default(PENDING)
   processedAt     DateTime?
   refundedAt      DateTime?

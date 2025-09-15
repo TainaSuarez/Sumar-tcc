@@ -59,108 +59,95 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-purple-50 via-white to-violet-50">
-      <div className="w-full px-6 sm:px-8 lg:px-16 py-16">
-        <div className="grid lg:grid-cols-2 gap-8 items-center">
-          {/* Left side - Message */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 font-sans">
-                <span className="text-gray-900 font-medium">Sumar+</span>
-                <span className="block text-purple-600 font-bold">transforma pequeños</span>
-                <span className="text-violet-600 font-semibold">gestos</span>
-                <span className="text-gray-900 font-light"> en </span>
-                <span className="text-purple-600 font-bold">grandes cambios</span>
-              </h1>
-              
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                Conectamos personas con causas sociales para crear un impacto 
-                positivo en la sociedad. Cada donación, por pequeña que sea, 
-                puede marcar una gran diferencia.
-              </p>
-            </div>
+    <section className="relative h-screen overflow-hidden">
+      {/* Background Images */}
+      {carouselImages.map((image, index) => (
+        <div
+          key={image.id}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <img
+            src={getImageSrc(image)}
+            alt={image.alt}
+            className="w-full h-full object-cover"
+            onError={() => handleImageError(image.id)}
+          />
+          {/* Overlay gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent" />
+        </div>
+      ))}
+
+      {/* Content Overlay */}
+      <div className="relative z-10 h-full flex items-center">
+        <div className="w-full px-6 sm:px-8 lg:px-16">
+          <div className="max-w-4xl">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 font-sans text-white">
+              <span className="font-medium">Sumar+</span>
+              <span className="block text-purple-300 font-bold">transforma</span>
+              <span className="text-violet-300 font-semibold">pequeños gestos</span>
+              <span className="font-light"> en </span>
+              <span className="text-purple-300 font-bold">grandes cambios</span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-8 max-w-2xl">
+              Conectamos personas con causas sociales para crear un impacto 
+              positivo en la sociedad. Cada donación, por pequeña que sea, 
+              puede marcar una gran diferencia.
+            </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
               {session ? (
-                <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700">
+                <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
                   Explorar campañas
                 </Button>
               ) : (
                 <>
-                  <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700">
+                  <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
                     Comenzar a donar
                   </Button>
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-purple-600 text-purple-600 hover:bg-purple-50">
+                  <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-purple-600">
                     Crear campaña
                   </Button>
                 </>
               )}
             </div>
-
-
-          </div>
-
-          {/* Right side - Carousel */}
-          <div className="relative">
-            <div className="relative w-[480px] h-[400px] md:w-[580px] md:h-[480px] rounded-3xl overflow-hidden shadow-2xl mx-auto">
-              {/* Images */}
-              {carouselImages.map((image, index) => (
-                <div
-                  key={image.id}
-                  className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                    index === currentSlide ? 'opacity-100' : 'opacity-0'
-                  }`}
-                >
-                  <img
-                    src={getImageSrc(image)}
-                    alt={image.alt}
-                    className="w-full h-full object-cover"
-                    onError={() => handleImageError(image.id)}
-                  />
-                  {/* Overlay gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-                </div>
-              ))}
-
-              {/* Navigation arrows */}
-              <button
-                onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-lg"
-                aria-label="Imagen anterior"
-              >
-                <ChevronLeft className="w-6 h-6 text-gray-800" />
-              </button>
-              
-              <button
-                onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/80 hover:bg-white transition-colors shadow-lg"
-                aria-label="Siguiente imagen"
-              >
-                <ChevronRight className="w-6 h-6 text-gray-800" />
-              </button>
-
-              {/* Dots indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2">
-                {carouselImages.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentSlide(index)}
-                    className={`w-3 h-3 rounded-full transition-colors ${
-                      index === currentSlide 
-                        ? 'bg-white' 
-                        : 'bg-white/50 hover:bg-white/75'
-                    }`}
-                    aria-label={`Ir a imagen ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-purple-200 rounded-full opacity-60 blur-xl" />
-            <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-violet-200 rounded-full opacity-40 blur-xl" />
           </div>
         </div>
+      </div>
+
+      {/* Navigation arrows */}
+      <button
+        onClick={prevSlide}
+        className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-sm z-20"
+        aria-label="Imagen anterior"
+      >
+        <ChevronLeft className="w-6 h-6 text-white" />
+      </button>
+      
+      <button
+        onClick={nextSlide}
+        className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-sm z-20"
+        aria-label="Siguiente imagen"
+      >
+        <ChevronRight className="w-6 h-6 text-white" />
+      </button>
+
+      {/* Dots indicator */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+        {carouselImages.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentSlide(index)}
+            className={`w-4 h-4 rounded-full transition-colors ${
+              index === currentSlide 
+                ? 'bg-white' 
+                : 'bg-white/50 hover:bg-white/75'
+            }`}
+            aria-label={`Ir a imagen ${index + 1}`}
+          />
+        ))}
       </div>
     </section>
   );

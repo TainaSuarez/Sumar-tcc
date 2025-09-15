@@ -14,6 +14,7 @@ import { CommentsSection } from '@/components/features/campaigns/CommentsSection
 import { ImageCarousel } from '@/components/ui/image-carousel';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/Footer';
+import { DonateButton } from '@/components/donations';
 import type { CampaignUpdate } from '@/types/campaignUpdate';
 
 interface Campaign {
@@ -278,10 +279,24 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                     </div>
 
                     {/* Botón de donación */}
-                    {campaign.status === 'ACTIVE' && (
-                      <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-14 text-xl rounded-lg">
-                        Contribuir ahora
-                      </Button>
+                    {(campaign.status === 'ACTIVE' || campaign.status === 'PENDING') && (
+                      <DonateButton 
+                        campaign={{
+                          id: campaign.id,
+                          title: campaign.title,
+                          goalAmount: campaign.goalAmount,
+                          currentAmount: campaign.currentAmount,
+                          currency: campaign.currency,
+                          status: campaign.status,
+                          creator: {
+                            id: campaign.creator.id,
+                            firstName: campaign.creator.firstName,
+                            lastName: campaign.creator.lastName,
+                            organizationName: campaign.creator.organizationName
+                          }
+                        }}
+                        className="w-full h-14 text-xl"
+                      />
                     )}
 
                     {/* Compartir */}

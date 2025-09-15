@@ -11,7 +11,7 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
 
   return (
-    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #ffffff 0%, #f5e9ff 100%)'}}>
+    <div className="min-h-screen pt-8" style={{background: 'linear-gradient(135deg, #ffffff 0%, #f5e9ff 100%)'}}>
       <Navbar />
       
       {/* Hero Carousel Section */}

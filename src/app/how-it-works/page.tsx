@@ -84,7 +84,7 @@ export default function HowItWorksPage() {
   const [activeStep, setActiveStep] = useState(1);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white pt-8">
       <Navbar />
       
       {/* Header específico para Cómo Funciona */}
