@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 interface HeroCarouselProps {
@@ -42,14 +42,6 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
     return () => clearInterval(timer);
   }, []);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
-  };
-
   const handleImageError = (imageId: number) => {
     setImageErrors(prev => ({ ...prev, [imageId]: true }));
   };
@@ -59,7 +51,7 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
   };
 
   return (
-    <section className="relative h-screen overflow-hidden">
+    <section className="relative h-[120vh] overflow-hidden -mt-20">
       {/* Background Images */}
       {carouselImages.map((image, index) => (
         <div
@@ -81,7 +73,7 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
 
       {/* Content Overlay */}
       <div className="relative z-10 h-full flex items-center">
-        <div className="w-full px-6 sm:px-8 lg:px-16">
+        <div className="w-full px-6 sm:px-8 lg:px-16 ml-8 sm:ml-12 lg:ml-16">
           <div className="max-w-4xl">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6 font-sans text-white">
               <span className="font-medium">Sumar+</span>
@@ -99,9 +91,11 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
 
             <div className="flex flex-col sm:flex-row gap-4">
               {session ? (
-                <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
-                  Explorar campañas
-                </Button>
+                <Link href="/campaigns">
+                  <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
+                    Explorar campañas
+                  </Button>
+                </Link>
               ) : (
                 <>
                   <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
@@ -117,38 +111,7 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
         </div>
       </div>
 
-      {/* Navigation arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-sm z-20"
-        aria-label="Imagen anterior"
-      >
-        <ChevronLeft className="w-6 h-6 text-white" />
-      </button>
-      
-      <button
-        onClick={nextSlide}
-        className="absolute right-6 top-1/2 -translate-y-1/2 p-3 rounded-full bg-white/20 hover:bg-white/30 transition-colors backdrop-blur-sm z-20"
-        aria-label="Siguiente imagen"
-      >
-        <ChevronRight className="w-6 h-6 text-white" />
-      </button>
 
-      {/* Dots indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
-        {carouselImages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentSlide(index)}
-            className={`w-4 h-4 rounded-full transition-colors ${
-              index === currentSlide 
-                ? 'bg-white' 
-                : 'bg-white/50 hover:bg-white/75'
-            }`}
-            aria-label={`Ir a imagen ${index + 1}`}
-          />
-        ))}
-      </div>
     </section>
   );
 }
