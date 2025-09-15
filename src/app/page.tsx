@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { authOptions } from '@/lib/auth';
 import { FeaturedCampaigns } from '@/components/features/FeaturedCampaigns';
 import { HeroCarousel } from '@/components/features/HeroCarousel';
+import { Footer } from '@/components/layout/Footer';
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,8 @@ export default async function Home() {
 
       {/* Featured Campaigns Section */}
       <FeaturedCampaigns limit={6} />
+
+
 
       {/* Features Section */}
       <section className="py-20 bg-white">
@@ -84,46 +87,10 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-purple-600 to-violet-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            ¿Listo para hacer la diferencia?
-          </h2>
-          <p className="text-xl text-purple-100 mb-8">
-            Únete a Sumar+ hoy y comienza a transformar vidas con tu generosidad
-          </p>
-          
-          {!session && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="text-lg px-8 py-3">
-                Crear Cuenta Gratis
-              </Button>
-              <Button size="lg" variant="outline" className="text-lg px-8 py-3 text-white border-white hover:bg-white hover:text-purple-600">
-                Ver Cómo Funciona
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
+
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center space-x-2 mb-4">
-              <Heart className="h-6 w-6 fill-current text-purple-400" />
-              <span className="text-xl font-bold">Sumar+</span>
-            </div>
-            <p className="text-gray-400 mb-4">
-              Conectando corazones generosos con causas que transforman vidas
-            </p>
-            <p className="text-sm text-gray-500">
-              © 2024 Sumar+. Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

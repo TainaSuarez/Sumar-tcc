@@ -8,6 +8,7 @@ import { Menu, X, Heart, User, LogOut, Settings, FolderOpen, Search, ShoppingCar
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
+
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -66,47 +67,78 @@ export function Navbar() {
   ];
 
   const isOnCampaignsPage = pathname === '/campaigns';
+  const isHomePage = pathname === '/';
 
   return (
     <nav
-        className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 rounded-full px-8 py-3 max-w-5xl w-11/12 ${
-          isScrolled
-            ? 'bg-black/40 backdrop-blur-md'
-            : 'bg-black/30 backdrop-blur-sm'
+        className={`z-50 transition-all duration-300 ${
+          isHomePage 
+            ? `fixed top-4 left-1/2 transform -translate-x-1/2 rounded-full px-8 ${
+                isScrolled
+                  ? 'bg-black/40 backdrop-blur-md py-1 max-w-md w-auto'
+                  : 'bg-black/30 backdrop-blur-sm py-3 max-w-5xl w-11/12'
+              }`
+            : 'w-full bg-white shadow-md border-b border-gray-200 px-4 sm:px-6 lg:px-8 fixed top-0 left-0 right-0'
         }`}
       >
       {/* Header Principal */}
-      <div className="w-full px-4 sm:px-6 lg:px-8">
+      <div className={`w-full ${
+        isHomePage ? 'px-4 sm:px-6 lg:px-8' : ''
+      }`}>
           <div className={`flex items-center justify-between transition-all duration-300 ${
-            isScrolled ? 'h-12 py-2' : 'h-14 py-3'
+            isHomePage 
+              ? (isScrolled ? 'h-10 py-1' : 'h-14 py-3')
+              : 'h-20 py-5'
           }`}>
           {/* Logo */}
           <div className="flex items-center">
             <button
               onClick={() => router.push('/')}
-              className={`flex items-center space-x-3 font-bold text-white hover:text-purple-300 transition-all duration-300 ${
-                isScrolled ? 'text-2xl' : 'text-3xl'
+              className={`flex items-center space-x-3 font-bold transition-all duration-300 ${
+                isHomePage 
+                  ? 'text-white hover:text-purple-300 text-4xl'
+                  : 'text-purple-600 hover:text-purple-700 text-3xl'
               }`}
             >
-              <Heart className={`fill-current text-purple-400 transition-all duration-300 ${
-                isScrolled ? 'h-8 w-8' : 'h-10 w-10'
+              <Heart className={`fill-current transition-all duration-300 ${
+                isHomePage
+                  ? 'text-purple-400 h-12 w-12'
+                  : 'text-purple-500 h-10 w-10'
               }`} />
-              <span className="text-purple-400 hover:text-purple-300 transition-colors duration-300">Sumar+</span>
+              <span className={`transition-all duration-300 overflow-hidden ${
+                isHomePage && isScrolled 
+                  ? 'w-0 opacity-0 ml-0' 
+                  : 'w-auto opacity-100'
+              } ${
+                isHomePage 
+                  ? 'text-purple-400 hover:text-purple-300'
+                  : 'text-purple-500 hover:text-purple-600'
+              }`}>Sumar+</span>
             </button>
           </div>
 
           {/* Navegación Central */}
-            <div className="hidden md:flex items-center space-x-10">
+            <div className={`hidden md:flex items-center transition-all duration-300 ${
+              isHomePage && isScrolled ? 'space-x-6' : 'space-x-10'
+            }`}>
               {navigation.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <button
                     key={item.name}
                     onClick={() => router.push(item.href)}
-                    className="flex items-center space-x-2 text-xl font-medium text-purple-400 hover:text-purple-300 transition-colors"
+                    className={`flex items-center space-x-2 text-xl font-medium transition-all duration-300 ${
+                      isHomePage
+                        ? 'text-purple-400 hover:text-purple-300'
+                        : 'text-purple-500 hover:text-purple-600'
+                    }`}
                   >
-                    <IconComponent className="h-5 w-5" />
-                    <span>{item.name}</span>
+                    <IconComponent className="h-12 w-12" />
+                    <span className={`transition-all duration-300 overflow-hidden ${
+                      isHomePage && isScrolled 
+                        ? 'w-0 opacity-0 ml-0' 
+                        : 'w-auto opacity-100'
+                    }`}>{item.name}</span>
                   </button>
                 );
               })}
@@ -145,45 +177,49 @@ export function Navbar() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`flex items-center space-x-2 text-purple-400 hover:text-purple-300 hover:bg-white/10 transition-all duration-300 ${
-                       isScrolled ? 'p-2' : 'p-3'
-                     }`}
+                    className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 hover:bg-white/10 transition-all duration-300 p-3"
                    >
-                     <User className={`transition-all duration-300 text-purple-400 ${
-                       isScrolled ? 'h-9 w-9' : 'h-10 w-10'
-                     }`} />
-                    <span className="hidden sm:block text-base">Mi Cuenta</span>
+                     <img 
+                        src="/user-icon.svg" 
+                        alt="Usuario" 
+                        className="h-12 w-12" 
+                      />
+                    <span className={`hidden sm:block text-base transition-all duration-300 overflow-hidden ${
+                      isHomePage && isScrolled 
+                        ? 'w-0 opacity-0 ml-0' 
+                        : 'w-auto opacity-100'
+                    }`}>Mi Cuenta</span>
                   </Button>
                   
                   {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-2 w-48 bg-black/40 backdrop-blur-md rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                     <button
                       onClick={() => router.push('/my-campaigns')}
-                      className="flex items-center px-4 py-3 text-base text-purple-600 hover:bg-white/10 w-full text-left"
+                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <FolderOpen className="h-5 w-5 mr-3" />
+                      <FolderOpen className="h-6 w-6 mr-3" />
                       Mis Campañas
                     </button>
                     <button
                       onClick={() => router.push('/dashboard')}
-                      className="flex items-center px-4 py-3 text-base text-purple-600 hover:bg-white/10 w-full text-left"
+                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <User className="h-5 w-5 mr-3" />
+                      <User className="h-6 w-6 mr-3" />
                       Dashboard
                     </button>
                     <button
                       onClick={() => router.push('/profile')}
-                      className="flex items-center px-4 py-3 text-base text-purple-600 hover:bg-white/10 w-full text-left"
+                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <Settings className="h-5 w-5 mr-3" />
+                      <Settings className="h-6 w-6 mr-3" />
                       Configuración
                     </button>
                     <hr className="my-1 border-white/20" />
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center px-4 py-3 text-base text-purple-600 hover:bg-white/10 w-full text-left"
+                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <LogOut className="h-5 w-5 mr-3" />
+                      <LogOut className="h-6 w-6 mr-3" />
                       Cerrar Sesión
                     </button>
                   </div>
@@ -194,7 +230,11 @@ export function Navbar() {
                 <Button
                   variant="ghost"
                   onClick={() => router.push('/auth/signin')}
-                   className="text-gray-700 hover:text-gray-900 hover:bg-purple-100"
+                   className={`${
+                     isHomePage 
+                       ? 'text-gray-700 hover:text-gray-900 hover:bg-purple-100'
+                       : 'text-purple-500 hover:text-purple-600 hover:bg-purple-50'
+                   }`}
                 >
                   Iniciar Sesión
                 </Button>

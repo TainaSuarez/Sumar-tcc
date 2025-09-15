@@ -180,7 +180,7 @@ export default function MyCampaignsPage() {
       <Navbar />
       
       {/* Header */}
-      <div className="bg-gradient-to-r from-white via-purple-50/30 to-violet-50/30 border-b border-purple-100/50 shadow-sm backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-white via-purple-50/30 to-violet-50/30 border-b border-purple-100/50 shadow-sm backdrop-blur-sm mt-8">
         <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-10">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
             <div className="space-y-3">

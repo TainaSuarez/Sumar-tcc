@@ -225,7 +225,7 @@ export default function CampaignsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 pt-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-violet-50 pt-20">
       {/* Navbar */}
       <Navbar />
       
