@@ -18,6 +18,8 @@ import {
   Plus
 } from 'lucide-react';
 
+import { ImageModal } from '@/components/ui/ImageModal';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +50,8 @@ interface UpdateItemProps {
 function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [showAllImages, setShowAllImages] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const formatDate = (dateString: string) => {
     try {
@@ -180,9 +184,6 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleImages.map((imageUrl, index) => (
                   <div key={index} className="relative group">
-                    <div className="mb-2 p-2 bg-gray-100 rounded text-xs font-mono">
-                      URL: {imageUrl}
-                    </div>
                     <Image
                       src={imageUrl}
                       alt={`Actualización ${update.title} - Imagen ${index + 1}`}
@@ -192,30 +193,26 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
                       unoptimized
                       onError={(e) => {
                         console.error('Error cargando imagen:', imageUrl);
-                        e.currentTarget.style.backgroundColor = '#f3f4f6';
-                        e.currentTarget.style.display = 'flex';
-                        e.currentTarget.style.alignItems = 'center';
-                        e.currentTarget.style.justifyContent = 'center';
-                        e.currentTarget.innerHTML = '<span style="color: #6b7280; font-size: 14px;">Error al cargar imagen</span>';
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.backgroundColor = '#f3f4f6';
+                        target.style.display = 'flex';
+                        target.style.alignItems = 'center';
+                        target.style.justifyContent = 'center';
+                        target.innerHTML = '<span style="color: #6b7280; font-size: 14px;">Error al cargar imagen</span>';
                       }}
                       onClick={() => {
-                        // TODO: Implementar modal de imagen
-                        window.open(imageUrl, '_blank');
+                        const actualIndex = update.images.indexOf(imageUrl);
+                        setSelectedImageIndex(actualIndex);
+                        setIsImageModalOpen(true);
                       }}
                     />
-                    {/* Imagen de prueba para comparar */}
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-500 mb-1">Imagen de prueba (debería funcionar):</p>
-                      <Image
-                        src="/test-image.svg"
-                        alt="Imagen de prueba"
-                        width={200}
-                        height={150}
-                        className="w-32 h-24 object-cover rounded border"
-                        unoptimized
-                      />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                          Ver imagen
+                        </div>
+                      </div>
                     </div>
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg"></div>
                   </div>
                 ))}
               </div>
@@ -263,6 +260,16 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de imágenes */}
+      <ImageModal
+        isOpen={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        images={update.images}
+        currentIndex={selectedImageIndex}
+        title={update.title}
+        description={update.content}
+      />
     </div>
   );
 }

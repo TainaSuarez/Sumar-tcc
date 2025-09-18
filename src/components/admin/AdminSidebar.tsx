@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   BarChart3,
   Users,
-  FolderOpen,
+  Megaphone,
   Tag,
   CreditCard,
   Menu,
@@ -37,7 +37,7 @@ const menuItems = [
   {
     label: 'Campañas',
     href: '/admin/campaigns',
-    icon: FolderOpen,
+    icon: Megaphone,
     description: 'Gestión de campañas'
   },
   {

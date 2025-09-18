@@ -128,22 +128,22 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
       {/* Navbar */}
       <Navbar />
       
+      {/* Botón de volver atrás - Entre header e imagen */}
+        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-none mx-auto py-12 mt-16">
+        <Link href="/campaigns">
+          <Button 
+            variant="ghost" 
+            className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 h-auto"
+          >
+            <ArrowLeft className="h-5 w-5 mr-2" />
+            Volver a las campañas
+          </Button>
+        </Link>
+      </div>
+
       {/* Contenido principal */}
-      <div className="py-8">
+      <div className="pb-8">
         <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-none mx-auto">
-          {/* Botón de volver atrás */}
-          <div className="mb-6">
-            <Link href="/campaigns">
-              <Button 
-                variant="ghost" 
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 p-2 h-auto"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Volver a las campañas
-              </Button>
-            </Link>
-          </div>
-          
           <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-8 xl:gap-12">
             {/* Contenido principal */}
             <div className="xl:col-span-2 lg:col-span-2 space-y-6">
@@ -169,7 +169,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                           strokeLinecap="round" 
                           strokeLinejoin="round" 
                           strokeWidth={2} 
-                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 002 2z" 
                         />
                       </svg>
                     </div>
@@ -179,8 +179,8 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 </div>
               )}
 
-              {/* Información principal */}
-              <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
+              {/* Título de la campaña */}
+              <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
                 <div className="flex items-start justify-between mb-6">
                   <h1 className="text-4xl font-bold text-gray-900 flex-1 mr-6 leading-tight">
                     {campaign.title}
@@ -190,12 +190,15 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   </span>
                 </div>
                 
-                <div className="text-lg text-gray-600 mb-8">
+                <div className="text-lg text-gray-600">
                   <span>por {creatorName}</span>
                   <span className="mx-3">•</span>
                   <span>en {campaign.category.name}</span>
                 </div>
+              </div>
 
+              {/* Descripción de la campaña */}
+              <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
                 {campaign.shortDescription && (
                   <div className="bg-gray-50 rounded-lg p-6 mb-8">
                     <p className="text-xl text-gray-700 leading-relaxed">

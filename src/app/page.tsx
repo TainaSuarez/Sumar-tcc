@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { Heart, Users, Target, Shield } from 'lucide-react';
+import { Sparkles, Users2, Zap, ShieldCheck } from 'lucide-react';
 
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
@@ -37,8 +37,8 @@ export default async function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-purple-600" />
+              <div className="bg-gradient-to-br from-purple-100 to-purple-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <ShieldCheck className="h-8 w-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 100% Transparente
@@ -49,8 +49,8 @@ export default async function Home() {
             </div>
 
             <div className="text-center">
-              <div className="bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-violet-600" />
+              <div className="bg-gradient-to-br from-violet-100 to-violet-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Users2 className="h-8 w-8 text-violet-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Comunidad Activa
@@ -61,8 +61,8 @@ export default async function Home() {
             </div>
 
             <div className="text-center">
-              <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="h-8 w-8 text-purple-600" />
+              <div className="bg-gradient-to-br from-purple-100 to-purple-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Zap className="h-8 w-8 text-purple-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Impacto Medible
@@ -73,8 +73,8 @@ export default async function Home() {
             </div>
 
             <div className="text-center">
-              <div className="bg-violet-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Heart className="h-8 w-8 text-violet-600" />
+              <div className="bg-gradient-to-br from-violet-100 to-violet-200 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Sparkles className="h-8 w-8 text-violet-600" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 Fácil de Usar

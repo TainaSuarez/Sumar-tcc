@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, Heart, User, LogOut, Settings, FolderOpen, Search, ShoppingCart, Plus, Home, HelpCircle, Target } from 'lucide-react';
+import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -197,7 +197,7 @@ export function Navbar() {
                       onClick={() => router.push('/my-campaigns')}
                       className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <FolderOpen className="h-6 w-6 mr-3" />
+                      <Megaphone className="h-6 w-6 mr-3" />
                       Mis Campañas
                     </button>
                     <button

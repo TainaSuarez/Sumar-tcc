@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, Users, Heart, Target, DollarSign, Award } from 'lucide-react';
+import { TrendingUp, Users2, Sparkles, Zap, DollarSign, Award } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface StatisticItem {
@@ -14,32 +14,32 @@ interface StatisticItem {
 
 const statistics: StatisticItem[] = [
   {
-    icon: Users,
+    icon: Users2,
     value: '47.892',
     label: 'Personas Beneficiadas',
     description: 'Vidas transformadas a través de donaciones',
-    color: 'bg-purple-500'
+    color: 'bg-gradient-to-br from-purple-500 to-purple-600'
   },
   {
-    icon: Heart,
+    icon: Sparkles,
     value: '3.247',
     label: 'Causas Ayudadas',
     description: 'Campañas exitosas que cambiaron realidades',
-    color: 'bg-violet-500'
+    color: 'bg-gradient-to-br from-violet-500 to-violet-600'
   },
   {
     icon: DollarSign,
     value: '$2.8M',
     label: 'Fondos Recaudados',
     description: 'Total donado para causas sociales',
-    color: 'bg-purple-600'
+    color: 'bg-gradient-to-br from-purple-600 to-purple-700'
   },
   {
-    icon: Target,
+    icon: Zap,
     value: '92%',
     label: 'Tasa de Impacto',
     description: 'Campañas que lograron su objetivo',
-    color: 'bg-violet-600'
+    color: 'bg-gradient-to-br from-violet-600 to-violet-700'
   }
 ];
 
@@ -62,7 +62,7 @@ export function StatisticsSection() {
             return (
               <Card key={index} className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm">
                 <CardContent className="p-8 text-center">
-                  <div className={`${stat.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`${stat.color} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                     <IconComponent className="h-8 w-8 text-white" />
                   </div>
                   

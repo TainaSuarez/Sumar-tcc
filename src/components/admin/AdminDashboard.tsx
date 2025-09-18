@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Users,
-  FolderOpen,
+  Megaphone,
   CreditCard,
   DollarSign,
   TrendingUp,
@@ -184,7 +184,7 @@ export function AdminDashboard() {
           title="Campañas Activas"
           value={stats.overview.activeCampaigns}
           description={`${stats.overview.totalCampaigns} campañas totales`}
-          icon={FolderOpen}
+          icon={Megaphone}
           trend={{
             value: parseFloat(stats.growth.campaigns.percentage),
             label: "últimos 7 días",
