@@ -191,6 +191,7 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
                       height={300}
                       className="w-full h-48 object-cover rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
                       unoptimized
+
                       onError={(e) => {
                         console.error('Error cargando imagen:', imageUrl);
                         const target = e.currentTarget as HTMLImageElement;
