@@ -8,13 +8,14 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 import { UpdatesTimeline } from '@/components/features/campaigns/UpdatesTimeline';
 import { CommentsSection } from '@/components/features/campaigns/CommentsSection';
 import { ImageCarousel } from '@/components/ui/image-carousel';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/Footer';
-import { DonateButton } from '@/components/donations';
+import { MockDonateButton } from '@/components/donations';
 import type { CampaignUpdate } from '@/types/campaignUpdate';
 
 interface Campaign {
@@ -242,14 +243,19 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                         <div className="text-2xl font-semibold text-gray-700 mb-3">
                           Recaudado
                         </div>
-                        <div className="text-6xl font-bold text-gray-900 mb-4">
-                          {Number(campaign.currentAmount).toLocaleString()}€
+                        <div className="text-6xl font-bold text-gray-900 mb-4 transition-all duration-500 ease-out">
+                          {Number(campaign.currentAmount).toLocaleString('es-UY')} $UY
                         </div>
                         <div className="text-xl text-gray-600 mb-6">
-                          Meta: {Number(campaign.goalAmount).toLocaleString()}€
+                          Meta: {Number(campaign.goalAmount).toLocaleString('es-UY')} $UY
                         </div>
-                        <div className="text-3xl font-bold text-purple-600 mb-3">
+                        <div className="text-3xl font-bold text-purple-600 mb-3 transition-all duration-500 ease-out">
                           {progressPercentage.toFixed(0)}% completado
+                        </div>
+                        <div className="text-lg text-gray-600 mb-3">
+                          <span className="font-semibold text-blue-600 transition-all duration-500 ease-out">
+                            {campaign.donationCount}
+                          </span> donantes
                         </div>
                         <div className="text-lg text-gray-600">
                           {Math.ceil((new Date().getTime() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24))} días restantes
@@ -257,7 +263,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-6 mb-8">
                         <div
-                          className="bg-purple-500 h-6 rounded-full transition-all duration-300"
+                          className="bg-purple-500 h-6 rounded-full transition-all duration-1000 ease-out"
                           style={{ width: `${progressPercentage}%` }}
                         />
                       </div>
@@ -283,22 +289,45 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
                     {/* Botón de donación */}
                     {(campaign.status === 'ACTIVE' || campaign.status === 'PENDING') && (
-                      <DonateButton 
+                      <MockDonateButton 
                         campaign={{
                           id: campaign.id,
                           title: campaign.title,
                           goalAmount: campaign.goalAmount,
-                          currentAmount: campaign.currentAmount,
-                          currency: campaign.currency,
-                          status: campaign.status,
-                          creator: {
-                            id: campaign.creator.id,
-                            firstName: campaign.creator.firstName,
-                            lastName: campaign.creator.lastName,
-                            organizationName: campaign.creator.organizationName
-                          }
+                          currentAmount: campaign.currentAmount
                         }}
                         className="w-full h-14 text-xl"
+                        onDonationSuccess={(donationData) => {
+                          console.log('Donación simulada exitosa:', donationData);
+                          
+                          // Formatear el monto para mostrar
+                          const formattedAmount = new Intl.NumberFormat('es-UY', {
+                            style: 'currency',
+                            currency: 'UYU',
+                          }).format(donationData.amount);
+                          
+                          // Mostrar notificación de éxito
+                          toast.success(
+                            `¡Gracias por tu donación de ${formattedAmount}!`,
+                            {
+                              description: 'Tu contribución ayudará a hacer realidad esta campaña.',
+                              duration: 5000,
+                            }
+                          );
+                          
+                          // Actualizar el estado local de la campaña
+                          if (campaign) {
+                            setCampaign(prevCampaign => {
+                              if (!prevCampaign) return null;
+                              
+                              return {
+                                ...prevCampaign,
+                                currentAmount: prevCampaign.currentAmount + donationData.amount,
+                                donationCount: prevCampaign.donationCount + 1
+                              };
+                            });
+                          }
+                        }}
                       />
                     )}
 

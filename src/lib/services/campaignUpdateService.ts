@@ -213,8 +213,8 @@ export class CampaignUpdateService {
           title: update.title,
           content: update.content,
           type: update.type as UpdateType,
-          images: update.images.map((filename: string) => getPublicUpdateImageUrl(filename)),
-          videos: update.videos.map((filename: string) => getPublicUpdateVideoUrl(filename)),
+          images: update.images as string[], // Ya son URLs completas
+          videos: update.videos as string[], // Ya son URLs completas
           isPublic: update.isPublic,
           createdAt: update.createdAt.toISOString(),
           updatedAt: update.updatedAt.toISOString(),

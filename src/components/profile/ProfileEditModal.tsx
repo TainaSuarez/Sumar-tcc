@@ -86,19 +86,21 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
     if (!avatarFile) return null;
 
     const formData = new FormData();
-    formData.append('avatar', avatarFile);
+    formData.append('file', avatarFile);
 
     try {
       const response = await fetch('/api/user/avatar', {
         method: 'POST',
         body: formData,
       });
-
+      
       if (response.ok) {
         const data = await response.json();
         return data.avatarUrl;
       } else {
-        throw new Error('Error al subir la imagen');
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        toast.error(errorData.error || 'Error al subir la imagen');
+        throw new Error(errorData.error || 'Error al subir la imagen');
       }
     } catch (error) {
       console.error('Error uploading avatar:', error);

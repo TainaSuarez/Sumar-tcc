@@ -24,6 +24,15 @@ export function ImageModal({
 }: ImageModalProps) {
   const [activeIndex, setActiveIndex] = useState(currentIndex);
 
+  // Definir las funciones de navegación primero
+  const goToNext = () => {
+    setActiveIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const goToPrevious = () => {
+    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
   useEffect(() => {
     setActiveIndex(currentIndex);
   }, [currentIndex]);
@@ -47,7 +56,7 @@ export function ImageModal({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, activeIndex]);
+  }, [isOpen, onClose, goToPrevious, goToNext]);
 
   useEffect(() => {
     if (isOpen) {
@@ -61,15 +70,9 @@ export function ImageModal({
     };
   }, [isOpen]);
 
-  const goToNext = () => {
-    setActiveIndex((prev) => (prev + 1) % images.length);
-  };
+  if (!isOpen || !images.length) return null;
 
-  const goToPrevious = () => {
-    setActiveIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
-
-  if (!isOpen) return null;
+  console.log('ImageModal - isOpen:', isOpen, 'images:', images, 'activeIndex:', activeIndex);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -131,14 +134,19 @@ export function ImageModal({
 
         {/* Image */}
         <div className="relative bg-black rounded-lg overflow-hidden">
-          <Image
+          <img
             src={images[activeIndex]}
             alt={`${title || 'Imagen'} ${activeIndex + 1}`}
-            width={1200}
-            height={800}
             className="max-w-full max-h-[80vh] object-contain"
-            unoptimized
-            priority
+            onLoad={() => {
+              console.log('MODAL IMG - Imagen cargada exitosamente:', images[activeIndex]);
+            }}
+            onError={(e) => {
+              console.error('MODAL IMG - Error loading image:', images[activeIndex]);
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              target.parentElement!.innerHTML = '<div class="flex items-center justify-center h-64 text-white">Error al cargar la imagen</div>';
+            }}
           />
         </div>
 
@@ -165,13 +173,10 @@ export function ImageModal({
                       : 'border-white/50 hover:border-white/80'
                   }`}
                 >
-                  <Image
+                  <img
                     src={image}
                     alt={`Miniatura ${index + 1}`}
-                    width={48}
-                    height={48}
                     className="w-full h-full object-cover"
-                    unoptimized
                   />
                 </button>
               ))}

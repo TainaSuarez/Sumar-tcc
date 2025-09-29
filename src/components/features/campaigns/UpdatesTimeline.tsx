@@ -53,6 +53,9 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  // Debug: mostrar las URLs de las imágenes
+  console.log('UpdateItem - URLs de imágenes para update:', update.id, update.images);
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), "d 'de' MMMM, yyyy 'a las' HH:mm", { 
@@ -184,16 +187,16 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {visibleImages.map((imageUrl, index) => (
                   <div key={index} className="relative group">
-                    <Image
+                    {/* Prueba con img HTML normal */}
+                    <img
                       src={imageUrl}
                       alt={`Actualización ${update.title} - Imagen ${index + 1}`}
-                      width={400}
-                      height={300}
                       className="w-full h-48 object-cover rounded-lg border hover:shadow-md transition-shadow cursor-pointer"
-                      unoptimized
-
+                      onLoad={() => {
+                        console.log('IMG HTML - Imagen cargada exitosamente:', imageUrl);
+                      }}
                       onError={(e) => {
-                        console.error('Error cargando imagen:', imageUrl);
+                        console.error('IMG HTML - Error cargando imagen:', imageUrl);
                         const target = e.currentTarget as HTMLImageElement;
                         target.style.backgroundColor = '#f3f4f6';
                         target.style.display = 'flex';
@@ -202,7 +205,10 @@ function UpdateItem({ update, isOwner, onEdit, onDelete }: UpdateItemProps) {
                         target.innerHTML = '<span style="color: #6b7280; font-size: 14px;">Error al cargar imagen</span>';
                       }}
                       onClick={() => {
+                        console.log('Imagen clickeada:', imageUrl);
+                        console.log('Todas las imágenes:', update.images);
                         const actualIndex = update.images.indexOf(imageUrl);
+                        console.log('Índice seleccionado:', actualIndex);
                         setSelectedImageIndex(actualIndex);
                         setIsImageModalOpen(true);
                       }}

@@ -201,18 +201,11 @@ export function Navbar() {
                       Mis Campañas
                     </button>
                     <button
-                      onClick={() => router.push('/dashboard')}
-                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
-                    >
-                      <User className="h-6 w-6 mr-3" />
-                      Dashboard
-                    </button>
-                    <button
                       onClick={() => router.push('/profile')}
                       className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
                     >
-                      <Settings className="h-6 w-6 mr-3" />
-                      Configuración
+                      <User className="h-6 w-6 mr-3" />
+                      Mi Perfil
                     </button>
                     <hr className="my-1 border-white/20" />
                     <button
