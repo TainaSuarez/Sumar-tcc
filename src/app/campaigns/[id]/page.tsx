@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { CampaignStatusLabels, CampaignStatusColors } from '@/types/campaign';
 import { UpdatesTimeline } from '@/components/features/campaigns/UpdatesTimeline';
@@ -57,6 +57,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [campaignId, setCampaignId] = useState<string>('');
+  const [donationSuccess, setDonationSuccess] = useState<{ amount: number } | null>(null);
 
   // Resolver params
   useEffect(() => {
@@ -116,10 +117,9 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
   const isOwner = session?.user?.id === campaign.creator.id;
 
-  const progressPercentage = Math.min(
-    (Number(campaign.currentAmount) / Number(campaign.goalAmount)) * 100,
-    100
-  );
+  const progressPercentage = Number(campaign.goalAmount) > 0
+    ? Math.min((Number(campaign.currentAmount ?? 0) / Number(campaign.goalAmount)) * 100, 100)
+    : 0;
 
   const creatorName = campaign.creator.organizationName || 
     `${campaign.creator.firstName} ${campaign.creator.lastName || ''}`.trim();
@@ -130,7 +130,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
       <Navbar />
       
       {/* Botón de volver atrás - Entre header e imagen */}
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-none mx-auto py-12 mt-16">
+        <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-6 mt-16">
         <Link href="/campaigns">
           <Button 
             variant="ghost" 
@@ -144,8 +144,8 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
       {/* Contenido principal */}
       <div className="pb-8">
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 max-w-none mx-auto">
-          <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-8 xl:gap-12">
+        <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+          <div className="grid grid-cols-1 xl:grid-cols-3 lg:grid-cols-3 gap-6 xl:gap-8 items-start">
             {/* Contenido principal */}
             <div className="xl:col-span-2 lg:col-span-2 space-y-6">
               {/* Imagen de la campaña */}
@@ -153,11 +153,11 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                 <ImageCarousel 
                   images={campaign.images} 
                   title={campaign.title}
-                  className="w-full h-96 mb-32"
+                  className="w-full mb-5"
                 />
               ) : (
                 /* Placeholder cuando no hay imágenes */
-                <div className="relative h-96 w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center mb-32">
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100 flex items-center justify-center mb-6">
                   <div className="text-center text-gray-500">
                     <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-lg flex items-center justify-center">
                       <svg 
@@ -182,8 +182,8 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
 
               {/* Título de la campaña */}
               <div className="bg-white rounded-lg border border-gray-200 p-8 mb-6">
-                <div className="flex items-start justify-between mb-6">
-                  <h1 className="text-4xl font-bold text-gray-900 flex-1 mr-6 leading-tight">
+                <div className="flex items-start justify-between mb-4">
+                  <h1 className="text-4xl font-bold text-gray-900 flex-1 mr-6 leading-tight break-words">
                     {campaign.title}
                   </h1>
                   <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap">
@@ -191,33 +191,27 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   </span>
                 </div>
                 
-                <div className="text-lg text-gray-600">
-                  <span>por {creatorName}</span>
-                  <span className="mx-3">•</span>
-                  <span>en {campaign.category.name}</span>
+                <div className="text-lg text-gray-600 flex flex-wrap items-center gap-2">
+                  <span className="truncate max-w-xs">por {creatorName}</span>
+                  <span className="hidden sm:inline">•</span>
+                  <span className="truncate max-w-xs">en {campaign.category.name}</span>
+                </div>
+
+                {campaign.shortDescription && (
+                  <p className="text-xl text-gray-700 leading-relaxed break-words mt-6">
+                    {campaign.shortDescription}
+                  </p>
+                )}
+
+                <div className="whitespace-pre-wrap break-all text-gray-700 text-lg leading-relaxed mt-6">
+                  {campaign.description}
                 </div>
               </div>
 
-              {/* Descripción de la campaña */}
-              <div className="bg-white rounded-lg border border-gray-200 p-8 mb-8">
-                {campaign.shortDescription && (
-                  <div className="bg-gray-50 rounded-lg p-6 mb-8">
-                    <p className="text-xl text-gray-700 leading-relaxed">
-                      {campaign.shortDescription}
-                    </p>
-                  </div>
-                )}
-                
-                <div className="prose max-w-none">
-                  <h3 className="text-2xl font-semibold mb-6 text-gray-900">Descripción del proyecto</h3>
-                  <div className="whitespace-pre-wrap text-gray-700 text-lg leading-relaxed mb-4">
-                    {campaign.description}
-                  </div>
-                </div>
-              </div>
+              {/* Descripción de la campaña eliminada y movida arriba */}
 
               {/* Sección de actualizaciones */}
-              <div className="mt-8">
+              <div className="mt-6">
                 <UpdatesTimeline 
                   campaignId={campaignId}
                   isOwner={isOwner}
@@ -227,65 +221,85 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
               </div>
 
               {/* Sección de comentarios */}
-              <div className="mt-8">
+              <div className="mt-6">
                 <CommentsSection campaignId={campaignId} />
               </div>
             </div>
 
             {/* Sidebar de donación */}
-            <div className="space-y-8">
+            <div className="space-y-6 max-w-md xl:max-w-sm w-full mx-auto self-start">
               <Card className="overflow-hidden">
-                <CardContent className="p-8">
-                  <div className="space-y-8">
+                <CardContent className="p-5">
+                  <div className="space-y-6">
                     {/* Progreso */}
                     <div>
                       <div className="mb-8">
-                        <div className="text-2xl font-semibold text-gray-700 mb-3">
+                        <div className="text-xl font-semibold text-gray-700 mb-2">
                           Recaudado
                         </div>
-                        <div className="text-6xl font-bold text-gray-900 mb-4 transition-all duration-500 ease-out">
+                        <div className="text-4xl font-bold text-gray-900 mb-3 transition-all duration-500 ease-out">
                           {Number(campaign.currentAmount).toLocaleString('es-UY')} $UY
                         </div>
-                        <div className="text-xl text-gray-600 mb-6">
+                        <div className="text-base text-gray-600 mb-4">
                           Meta: {Number(campaign.goalAmount).toLocaleString('es-UY')} $UY
                         </div>
-                        <div className="text-3xl font-bold text-purple-600 mb-3 transition-all duration-500 ease-out">
+                        <div className="text-2xl font-bold text-purple-600 mb-2 transition-all duration-500 ease-out">
                           {progressPercentage.toFixed(0)}% completado
                         </div>
-                        <div className="text-lg text-gray-600 mb-3">
+                        <div className="text-sm text-gray-600 mb-2">
                           <span className="font-semibold text-blue-600 transition-all duration-500 ease-out">
-                            {campaign.donationCount}
+                            {Number(campaign.donationCount ?? campaign._count?.donations ?? 0).toLocaleString('es-UY')}
                           </span> donantes
                         </div>
-                        <div className="text-lg text-gray-600">
+                        <div className="text-sm text-gray-600">
                           {Math.ceil((new Date().getTime() - new Date(campaign.createdAt).getTime()) / (1000 * 60 * 60 * 24))} días restantes
                         </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-6 mb-8">
+                      <div className="w-full bg-gray-200 rounded-full h-4 mb-6">
                         <div
-                          className="bg-purple-500 h-6 rounded-full transition-all duration-1000 ease-out"
+                          className="bg-purple-500 h-4 rounded-full transition-all duration-1000 ease-out"
                           style={{ width: `${progressPercentage}%` }}
                         />
                       </div>
                     </div>
 
                     {/* Estadísticas */}
-                    <div className="bg-gray-50 rounded-lg p-6 mb-8">
-                      <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                      <div className="grid grid-cols-3 gap-3">
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-900 mb-1">$1 000</div>
-                          <div className="text-sm text-gray-600">Donación mínima</div>
+                          <div className="text-xl font-bold text-gray-900 mb-1">$1 000</div>
+                          <div className="text-xs text-gray-600">Donación mínima</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-900 mb-1">$5 000</div>
-                          <div className="text-sm text-gray-600">Donación media</div>
+                          <div className="text-xl font-bold text-gray-900 mb-1">$5 000</div>
+                          <div className="text-xs text-gray-600">Donación media</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-2xl font-bold text-gray-900 mb-1">$10 000</div>
-                          <div className="text-sm text-gray-600">Otra meta</div>
+                          <div className="text-xl font-bold text-gray-900 mb-1">$10 000</div>
+                          <div className="text-xs text-gray-600">Otra meta</div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Mensaje de confirmación de pago */}
+                    {donationSuccess && (
+                      <div className="rounded-md border border-green-200 bg-green-50 p-4">
+                        <div className="flex items-start">
+                          <CheckCircle className="h-5 w-5 text-green-600 mr-2 mt-0.5" />
+                          <div className="text-sm text-green-700">
+                            Pago confirmado: tu donación de {new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(donationSuccess.amount)} fue realizada con éxito. ¡Gracias por apoyar esta campaña!
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-auto text-green-700 hover:text-green-900 hover:bg-green-100"
+                            onClick={() => setDonationSuccess(null)}
+                          >
+                            Cerrar
+                          </Button>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Botón de donación */}
                     {(campaign.status === 'ACTIVE' || campaign.status === 'PENDING') && (
@@ -296,7 +310,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                           goalAmount: campaign.goalAmount,
                           currentAmount: campaign.currentAmount
                         }}
-                        className="w-full h-14 text-xl"
+                        className="w-full h-12 text-lg"
                         onDonationSuccess={(donationData) => {
                           console.log('Donación simulada exitosa:', donationData);
                           
@@ -315,6 +329,9 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                             }
                           );
                           
+                          // Mostrar mensaje persistente dentro de la página
+                          setDonationSuccess({ amount: Number(donationData.amount ?? 0) })
+                          
                           // Actualizar el estado local de la campaña
                           if (campaign) {
                             setCampaign(prevCampaign => {
@@ -322,8 +339,8 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                               
                               return {
                                 ...prevCampaign,
-                                currentAmount: prevCampaign.currentAmount + donationData.amount,
-                                donationCount: prevCampaign.donationCount + 1
+                                currentAmount: Number(prevCampaign.currentAmount ?? 0) + Number(donationData.amount ?? 0),
+                                donationCount: Number(prevCampaign.donationCount ?? prevCampaign._count?.donations ?? 0) + 1
                               };
                             });
                           }
@@ -331,21 +348,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                       />
                     )}
 
-                    {/* Compartir */}
-                    <div className="border-t border-gray-200 pt-8">
-                      <p className="text-lg font-medium text-gray-900 mb-6">Compartir esta campaña</p>
-                      <div className="grid grid-cols-1 gap-3">
-                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-blue-50 hover:border-blue-300">
-                          Facebook
-                        </Button>
-                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-sky-50 hover:border-sky-300">
-                          Twitter
-                        </Button>
-                        <Button variant="outline" className="h-12 text-base font-medium border-2 hover:bg-gray-50 hover:border-gray-400">
-                          Copiar link
-                        </Button>
-                      </div>
-                    </div>
+
                   </div>
                 </CardContent>
               </Card>

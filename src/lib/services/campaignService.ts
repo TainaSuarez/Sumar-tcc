@@ -85,7 +85,7 @@ export class CampaignService {
                   currency: 'UYU',
         type: CampaignType.DONATION, // Por defecto es donación
         status: CampaignStatus.ACTIVE, // Por defecto está activa
-          images: imageUrls,
+          images: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
           creatorId: data.creatorId,
           categoryId: data.categoryId,
           urgencyLevel: 1,
@@ -153,7 +153,25 @@ export class CampaignService {
         },
       });
 
-      return campaign;
+      if (!campaign) {
+        return null;
+      }
+
+      // Convertir el campo images de JSON string a array
+      let images: string[] = [];
+      if (campaign.images) {
+        try {
+          images = JSON.parse(campaign.images);
+        } catch (error) {
+          console.error('Error parsing images JSON:', error);
+          images = [];
+        }
+      }
+
+      return {
+        ...campaign,
+        images,
+      };
     } catch (error) {
       console.error('Error obteniendo campaña:', error);
       throw new Error('Error al obtener la campaña.');
@@ -185,7 +203,25 @@ export class CampaignService {
         },
       });
 
-      return campaign;
+      if (!campaign) {
+        return null;
+      }
+
+      // Convertir el campo images de JSON string a array
+      let images: string[] = [];
+      if (campaign.images) {
+        try {
+          images = JSON.parse(campaign.images);
+        } catch (error) {
+          console.error('Error parsing images JSON:', error);
+          images = [];
+        }
+      }
+
+      return {
+        ...campaign,
+        images,
+      };
     } catch (error) {
       console.error('Error obteniendo campaña por slug:', error);
       throw new Error('Error al obtener la campaña.');
@@ -277,7 +313,24 @@ export class CampaignService {
         prisma.campaign.count({ where }),
       ]);
 
-      return { campaigns, total };
+      // Convertir el campo images de JSON string a array para cada campaña
+      const campaignsWithParsedImages = campaigns.map(campaign => {
+        let images: string[] = [];
+        if (campaign.images) {
+          try {
+            images = JSON.parse(campaign.images);
+          } catch (error) {
+            console.error('Error parsing images JSON for campaign:', campaign.id, error);
+            images = [];
+          }
+        }
+        return {
+          ...campaign,
+          images,
+        };
+      });
+
+      return { campaigns: campaignsWithParsedImages, total };
     } catch (error) {
       console.error('Error obteniendo campañas por creador:', error);
       throw new Error('Error al obtener las campañas.');

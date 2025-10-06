@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 // Enumeraciones
@@ -140,9 +140,9 @@ model Campaign {
   slug            String         @unique
   description     String
   shortDescription String?
-  images          String[]       // Array de URLs de imágenes
-  goalAmount      Decimal        @db.Decimal(10, 2)
-  currentAmount   Decimal        @default(0) @db.Decimal(10, 2)
+  images          String?        // Array de URLs de imágenes
+  goalAmount      Float
+  currentAmount   Float          @default(0)
   currency        String         @default("UYU")
   type            CampaignType
   status          CampaignStatus @default(DRAFT)
@@ -203,7 +203,7 @@ model CampaignTag {
 // Modelo de Donaciones
 model Donation {
   id              String         @id @default(cuid())
-  amount          Decimal        @db.Decimal(10, 2)
+  amount          Float
   currency        String         @default("UYU")
   message         String?        // Mensaje del donante
   isAnonymous     Boolean        @default(false)
@@ -268,8 +268,8 @@ model CampaignUpdate {
   title       String
   content     String
   type        UpdateType @default(TEXT_ONLY)
-  images      String[]   // Array de URLs de imágenes
-  videos      String[]   // Array de URLs de videos
+  images      String?   // Array de URLs de imágenes
+  videos      String?   // Array de URLs de videos
   isPublic    Boolean    @default(true)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt

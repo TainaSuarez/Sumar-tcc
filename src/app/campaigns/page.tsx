@@ -30,7 +30,7 @@ interface Campaign {
   currentAmount: number;
   currency: string;
   status: string;
-  images: string[];
+  images: string[] | null;
   category: {
     id: string;
     name: string;
@@ -246,7 +246,7 @@ export default function CampaignsPage() {
 
       {/* Filtros de categorías */}
       <div className="bg-white border-b">
-        <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-6">
+        <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-6">
           <div className="space-y-6">
             {/* Botón de categorías */}
             <div className="max-w-md mx-auto relative">
@@ -314,7 +314,7 @@ export default function CampaignsPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-8">
+      <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8">
         {/* Estado de carga */}
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -420,7 +420,7 @@ export default function CampaignsPage() {
                     <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden h-full flex flex-col">
                       {/* Imagen más grande */}
                       <div className="relative aspect-[16/10] overflow-hidden">
-                        {campaign.images.length > 0 ? (
+                        {campaign.images && campaign.images.length > 0 ? (
                           <Image
                             src={campaign.images[0]}
                             alt={campaign.title}

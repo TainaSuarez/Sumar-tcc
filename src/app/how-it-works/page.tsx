@@ -60,6 +60,7 @@ const steps = [
     ],
     color: 'bg-emerald-500'
   }
+
 ];
 
 const features = [
@@ -99,8 +100,8 @@ export default function HowItWorksPage() {
         </div>
         
         {/* Contenido del banner */}
-        <div className="relative max-w-full mx-auto px-8 sm:px-12 lg:px-16 py-20">
-          <div className="max-w-6xl">
+        <div className="relative max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 2xl:px-32 py-20">
+          <div className="max-w-5xl">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 text-purple-800">
               Cómo Funciona Sumar+
             </h1>
@@ -112,7 +113,8 @@ export default function HowItWorksPage() {
       </div>
 
       {/* Steps Section */}
-      <div className="max-w-full mx-auto px-8 sm:px-12 lg:px-16 py-24">
+      <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 2xl:px-32 py-24">
+        <div className="max-w-5xl mx-auto">
 
         {/* Step Navigation */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
@@ -159,7 +161,7 @@ export default function HowItWorksPage() {
               if (step.id !== activeStep) return null;
               
               return (
-                <div key={step.id} className="bg-white border border-gray-200 rounded-xl shadow-sm">
+                <div key={step.id} className="bg-white border border-purple-200 rounded-2xl shadow-md">
                   <div className="p-10">
                     <div className="flex items-start gap-6 mb-8">
                       <div className="bg-purple-600 p-4 rounded-xl">
@@ -193,10 +195,11 @@ export default function HowItWorksPage() {
             })}
         </div>
       </div>
+    </div>
 
       {/* Features Section */}
       <div className="bg-purple-50 py-24">
-        <div className="max-w-full mx-auto px-8 sm:px-12 lg:px-16">
+        <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 2xl:px-32">
           <div className="mb-20">
             <h2 className="text-4xl md:text-5xl font-light text-purple-700 mb-6">
               ¿Por qué elegir Sumar+?
@@ -210,7 +213,7 @@ export default function HowItWorksPage() {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <div key={index} className="bg-white p-10 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors shadow-sm">
+                <div key={index} className="bg-white p-10 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors shadow-sm hover:shadow-md ring-1 ring-purple-100">
                   <div className="flex items-start gap-6">
                     <div className="bg-purple-600 p-4 rounded-xl flex-shrink-0">
                       <Icon className="h-8 w-8 text-white" />
@@ -233,18 +236,18 @@ export default function HowItWorksPage() {
 
       {/* CTA Section */}
       <div className="bg-white border-t border-purple-200 py-24">
-        <div className="max-w-full mx-auto px-8 sm:px-12 lg:px-16">
-          <div className="max-w-5xl">
+        <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 2xl:px-32">
+          <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-4xl md:text-5xl font-light text-purple-700 mb-8">
               ¿Listo para hacer la diferencia?
             </h2>
             <p className="text-xl text-gray-700 mb-10 leading-relaxed">
               Explora nuestras campañas activas y encuentra una causa que te inspire a contribuir.
             </p>
-            <div className="flex flex-col sm:flex-row gap-6">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
               <Button 
                 size="lg" 
-                className="bg-purple-600 hover:bg-purple-700 px-10 py-4 text-lg"
+                className="bg-purple-600 hover:bg-purple-700 px-10 py-4 text-lg rounded-2xl shadow-md"
                 onClick={() => window.location.href = '/campaigns'}
               >
                 Ver Campañas
@@ -252,7 +255,7 @@ export default function HowItWorksPage() {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-purple-300 text-purple-700 hover:bg-purple-50 px-10 py-4 text-lg"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50 px-10 py-4 text-lg rounded-2xl"
                 onClick={() => window.location.href = '/auth/signin'}
               >
                 Crear Cuenta

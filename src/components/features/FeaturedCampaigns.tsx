@@ -18,7 +18,7 @@ interface Campaign {
   currentAmount: number;
   currency: string;
   status: string;
-  images: string[];
+  images: string[] | null;
   category: {
     id: string;
     name: string;
@@ -187,7 +187,7 @@ export function FeaturedCampaigns({ limit = 6 }: FeaturedCampaignsProps) {
                 <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white border-purple-100 hover:border-purple-200 overflow-hidden">
                   {/* Imagen */}
                   <div className="relative aspect-video overflow-hidden">
-                    {campaign.images.length > 0 ? (
+                    {campaign.images && campaign.images.length > 0 ? (
                       <Image
                         src={campaign.images[0]}
                         alt={campaign.title}

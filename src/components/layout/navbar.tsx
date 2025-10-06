@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target } from 'lucide-react';
+import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target, Compass, Lightbulb, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,7 @@ export function Navbar() {
 
   const navigation = [
     { name: 'Inicio', href: '/', icon: Home },
-    { name: 'Campañas', href: '/campaigns', icon: Target },
+    { name: 'Campañas', href: '/campaigns', icon: Megaphone },
     { name: 'Cómo Funciona', href: '/how-it-works', icon: HelpCircle },
   ];
 
@@ -85,13 +85,13 @@ export function Navbar() {
       <div className={`w-full ${
         isHomePage ? 'px-4 sm:px-6 lg:px-8' : ''
       }`}>
-          <div className={`flex items-center justify-between transition-all duration-300 ${
+          <div className={`flex items-center justify-between transition-all duration-300 min-w-0 ${
             isHomePage 
               ? (isScrolled ? 'h-10 py-1' : 'h-14 py-3')
               : 'h-20 py-5'
           }`}>
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center mr-4 flex-shrink-0">
             <button
               onClick={() => router.push('/')}
               className={`flex items-center space-x-3 font-bold transition-all duration-300 ${
@@ -102,8 +102,8 @@ export function Navbar() {
             >
               <Heart className={`fill-current transition-all duration-300 ${
                 isHomePage
-                  ? 'text-purple-400 h-12 w-12'
-                  : 'text-purple-500 h-10 w-10'
+                  ? 'text-purple-400 h-8 w-8'
+                  : 'text-purple-500 h-7 w-7'
               }`} />
               <span className={`transition-all duration-300 overflow-hidden ${
                 isHomePage && isScrolled 
@@ -119,7 +119,7 @@ export function Navbar() {
 
           {/* Navegación Central */}
             <div className={`hidden md:flex items-center transition-all duration-300 ${
-              isHomePage && isScrolled ? 'space-x-6' : 'space-x-10'
+              isHomePage && isScrolled ? 'space-x-6 ml-4' : 'space-x-8 ml-6'
             }`}>
               {navigation.map((item) => {
                 const IconComponent = item.icon;
@@ -127,14 +127,14 @@ export function Navbar() {
                   <button
                     key={item.name}
                     onClick={() => router.push(item.href)}
-                    className={`flex items-center space-x-2 text-xl font-medium transition-all duration-300 ${
+                    className={`flex items-center space-x-2 text-xl font-medium transition-all duration-300 whitespace-nowrap ${
                       isHomePage
                         ? 'text-purple-400 hover:text-purple-300'
                         : 'text-purple-500 hover:text-purple-600'
                     }`}
                   >
-                    <IconComponent className="h-12 w-12" />
-                    <span className={`transition-all duration-300 overflow-hidden ${
+                    <IconComponent className="h-8 w-8" />
+                    <span className={`transition-all duration-300 overflow-hidden whitespace-nowrap ${
                       isHomePage && isScrolled 
                         ? 'w-0 opacity-0 ml-0' 
                         : 'w-auto opacity-100'
@@ -166,23 +166,23 @@ export function Navbar() {
           )}
 
           {/* Sección de Usuario */}
-          <div className="flex items-center space-x-5">
+          <div className="flex items-center space-x-3 flex-shrink-0 mr-4">
             {status === 'loading' ? (
               <div className="animate-pulse">
                 <div className="h-8 w-20 bg-gray-200 rounded"></div>
               </div>
             ) : session ? (
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
                   <div className="relative group">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 hover:bg-white/10 transition-all duration-300 p-3"
+                    className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 hover:bg-white/10 transition-all duration-300 p-2 whitespace-nowrap"
                    >
                      <img 
                         src="/user-icon.svg" 
                         alt="Usuario" 
-                        className="h-12 w-12" 
+                        className="h-8 w-8" 
                       />
                     <span className={`hidden sm:block text-base transition-all duration-300 overflow-hidden ${
                       isHomePage && isScrolled 
