@@ -5,13 +5,14 @@ import { prisma } from '@/lib/db';
 import { z } from 'zod';
 
 const updateProfileSchema = z.object({
-  firstName: z.string().min(1, 'El nombre es requerido').max(50, 'El nombre debe tener máximo 50 caracteres').optional(),
-  lastName: z.string().min(1, 'El apellido es requerido').max(50, 'El apellido debe tener máximo 50 caracteres').optional(),
+  firstName: z.string().max(50, 'El nombre debe tener máximo 50 caracteres').optional(),
+  lastName: z.string().max(50, 'El apellido debe tener máximo 50 caracteres').optional(),
   organizationName: z.string().max(100, 'El nombre de la organización debe tener máximo 100 caracteres').optional(),
   bio: z.string().max(500, 'La biografía debe tener máximo 500 caracteres').optional(),
   phone: z.string().max(20, 'El teléfono debe tener máximo 20 caracteres').optional(),
   address: z.string().max(200, 'La dirección debe tener máximo 200 caracteres').optional(),
   city: z.string().max(100, 'La ciudad debe tener máximo 100 caracteres').optional(),
+  avatar: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -62,19 +63,25 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    console.log('🔵 Profile update started');
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.id) {
+      console.log('❌ No session or user ID');
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
       );
     }
 
+    console.log('✅ User authenticated:', session.user.id);
     const body = await request.json();
+    console.log('📝 Request body:', body);
+    
     const validation = updateProfileSchema.safeParse(body);
 
     if (!validation.success) {
+      console.log('❌ Validation failed:', validation.error.errors);
       return NextResponse.json(
         { 
           error: 'Datos inválidos',
@@ -84,9 +91,10 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const { firstName, lastName, organizationName, bio, phone, address, city } = validation.data;
+    console.log('✅ Validation passed');
+    const { firstName, lastName, organizationName, bio, phone, address, city, avatar } = validation.data;
 
-    // Construir el nombre completo si se proporcionan firstName y lastName
+    // Construir el objeto de actualización
     let updateData: any = {
       firstName,
       lastName,
@@ -95,25 +103,17 @@ export async function PUT(request: NextRequest) {
       phone,
       address,
       city,
+      avatar,
     };
 
-    // Si se actualizan firstName o lastName, actualizar también el campo name
-    if (firstName !== undefined || lastName !== undefined) {
-      const currentUser = await prisma.user.findUnique({
-        where: { id: session.user.id },
-        select: { firstName: true, lastName: true }
-      });
-
-      const newFirstName = firstName !== undefined ? firstName : currentUser?.firstName || '';
-      const newLastName = lastName !== undefined ? lastName : currentUser?.lastName || '';
-      
-      updateData.name = `${newFirstName} ${newLastName}`.trim();
-    }
+    console.log('📝 Update data before filtering:', updateData);
 
     // Filtrar campos undefined
     updateData = Object.fromEntries(
       Object.entries(updateData).filter(([_, value]) => value !== undefined)
     );
+
+    console.log('📝 Final update data:', updateData);
 
     const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
@@ -133,13 +133,15 @@ export async function PUT(request: NextRequest) {
       },
     });
 
+    console.log('✅ User updated successfully:', updatedUser);
+
     return NextResponse.json({
       message: 'Perfil actualizado exitosamente',
       user: updatedUser,
     });
 
   } catch (error) {
-    console.error('Error updating user profile:', error);
+    console.error('❌ Error updating user profile:', error);
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

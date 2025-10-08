@@ -155,6 +155,12 @@ export default function CampaignsPage() {
     updateURL({ search: searchTerm, page: 1 });
   };
 
+  // Función para limpiar búsqueda
+  const clearSearch = () => {
+    setSearchTerm('');
+    updateURL({ search: '', page: 1 });
+  };
+
   // Función para cambiar categoría
   const handleCategoryChange = (categoryId: string) => {
     const newCategory = categoryId === selectedCategory ? '' : categoryId;
@@ -229,35 +235,57 @@ export default function CampaignsPage() {
       {/* Navbar */}
       <Navbar />
       
-      {/* Header */}
-      <div className="bg-white border-b border-purple-100 shadow-sm">
+      {/* Header con fondo lila */}
+      <div className="bg-gradient-to-r from-purple-100 via-violet-100 to-purple-100 border-b border-purple-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          {/* Mensaje principal alineado a la izquierda */}
+          <div className="text-left mb-8">
+            <h1 className="text-4xl font-bold text-purple-700 mb-4">
               Campañas Activas
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-purple-600 max-w-3xl">
               Descubre proyectos increíbles y ayuda a hacer realidad los sueños de personas como tú.
               Cada donación cuenta y puede marcar la diferencia.
             </p>
           </div>
-        </div>
-      </div>
-
-      {/* Filtros de categorías */}
-      <div className="bg-white border-b">
-        <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-6">
-          <div className="space-y-6">
-            {/* Botón de categorías */}
-            <div className="max-w-md mx-auto relative">
+          
+          {/* Controles de búsqueda y categorías debajo del mensaje */}
+          <div className="flex flex-col sm:flex-row gap-4 items-start">
+            {/* Barra de búsqueda */}
+            <form onSubmit={handleSearch} className="w-full sm:w-80">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400 h-5 w-5 z-10" />
+                <Input
+                  type="text"
+                  placeholder="Buscar campañas..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 pr-4 py-3 w-full h-12 border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
+                />
+                {searchTerm && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSearch}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0 hover:bg-gray-100 z-10"
+                  >
+                    ×
+                  </Button>
+                )}
+              </div>
+            </form>
+            
+            {/* Selector de categorías */}
+            <div className="relative w-full sm:w-80">
               <button
                 onClick={() => setShowCategories(!showCategories)}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg shadow-sm text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                className="w-full h-12 px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-300 rounded-lg shadow-sm text-left flex items-center justify-between hover:bg-white/90 transition-colors"
               >
                 <span className="text-gray-700 font-medium">
                   {selectedCategory ? 
                     categories.find(cat => cat.id === selectedCategory)?.name || 'Categorías' 
-                    : 'Categorías'
+                    : 'Todas las categorías'
                   }
                 </span>
                 <svg 
@@ -277,8 +305,8 @@ export default function CampaignsPage() {
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-10">
                   <button
                     onClick={() => {
-                      setSelectedCategory('')
-                      setShowCategories(false)
+                      handleCategoryChange('');
+                      setShowCategories(false);
                     }}
                     className={`w-full px-4 py-3 text-left border-b border-gray-200 transition-colors ${
                       selectedCategory === ''
@@ -292,8 +320,8 @@ export default function CampaignsPage() {
                     <button
                       key={category.id}
                       onClick={() => {
-                        setSelectedCategory(category.id)
-                        setShowCategories(false)
+                        handleCategoryChange(category.id);
+                        setShowCategories(false);
                       }}
                       className={`w-full px-4 py-3 text-left transition-colors ${
                         index === categories.length - 1 ? '' : 'border-b border-gray-200'
@@ -314,16 +342,16 @@ export default function CampaignsPage() {
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-screen-2xl mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Estado de carga */}
         {loading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, index) => (
               <Card key={index} className="animate-pulse h-full">
                 <div className="aspect-[16/10] bg-gray-200 rounded-t-lg" />
-                <CardContent className="p-8 space-y-5">
+                <CardContent className="p-6 space-y-4">
                   <div className="flex justify-between">
-                    <div className="h-6 bg-gray-200 rounded w-20" />
+                    <div className="h-5 bg-gray-200 rounded w-20" />
                     <div className="h-4 bg-gray-200 rounded w-16" />
                   </div>
                   <div className="h-6 bg-gray-200 rounded w-3/4" />
@@ -334,10 +362,10 @@ export default function CampaignsPage() {
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <div className="h-8 bg-gray-200 rounded w-24" />
-                      <div className="h-6 bg-gray-200 rounded w-12" />
+                      <div className="h-7 bg-gray-200 rounded w-24" />
+                      <div className="h-5 bg-gray-200 rounded w-12" />
                     </div>
-                    <div className="h-4 bg-gray-200 rounded w-full" />
+                    <div className="h-3 bg-gray-200 rounded w-full" />
                     <div className="flex justify-between">
                       <div className="h-4 bg-gray-200 rounded w-16" />
                       <div className="h-4 bg-gray-200 rounded w-20" />
@@ -408,8 +436,8 @@ export default function CampaignsPage() {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-              {campaigns.map((campaign) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+              {campaigns.slice(1, -1).map((campaign) => {
                 const progressPercentage = getProgressPercentage(
                   campaign.currentAmount,
                   campaign.goalAmount
@@ -417,9 +445,9 @@ export default function CampaignsPage() {
 
                 return (
                   <Link key={campaign.id} href={`/campaigns/${campaign.id}`}>
-                    <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden h-full flex flex-col">
-                      {/* Imagen más grande */}
-                      <div className="relative aspect-[16/10] overflow-hidden">
+                    <Card className="group hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 bg-white border-gray-100 hover:border-purple-200 rounded-2xl overflow-hidden flex flex-col h-[550px] max-w-md mx-auto">
+                      {/* Imagen más cuadrada */}
+                      <div className="relative aspect-[4/3] overflow-hidden h-[180px]">
                         {campaign.images && campaign.images.length > 0 ? (
                           <Image
                             src={campaign.images[0]}
@@ -463,69 +491,53 @@ export default function CampaignsPage() {
                         </div>
                       </div>
 
-                      <CardContent className="p-8 space-y-5 flex-1 flex flex-col">
-                        {/* Categoría y Creador */}
-                        <div className="flex items-center justify-between">
+                      <CardContent className="p-6 space-y-4 flex-1 flex flex-col min-h-[300px]">
+                        {/* Categoría */}
+                        <div className="flex items-center">
                           <Badge variant="secondary" className="bg-purple-50 text-purple-700 border-purple-200 px-3 py-1">
                             {campaign.category.name}
                           </Badge>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <MapPin className="h-3 w-3" />
-                            <span className="truncate max-w-24">{getCreatorName(campaign.creator)}</span>
-                          </div>
                         </div>
 
-                        {/* Título más grande */}
-                        <h3 className="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors leading-tight min-h-[3.5rem]">
+                        {/* Título Principal */}
+                        <h2 className="text-xl font-bold text-gray-900 line-clamp-2 group-hover:text-purple-700 transition-colors leading-tight mb-2">
                           {campaign.title}
-                        </h3>
+                        </h2>
 
-                        {/* Descripción con altura fija */}
+                        {/* Descripción */}
                         <div className="flex-1">
-                          <p className="text-gray-600 line-clamp-4 leading-relaxed text-sm">
+                          <p className="text-gray-600 line-clamp-2 leading-relaxed text-sm">
                             {campaign.shortDescription}
                           </p>
                         </div>
 
-                        {/* Progreso mejorado */}
-                        <div className="space-y-4 mt-auto">
-                          <div className="flex justify-between items-end">
-                            <div>
-                              <div className="text-2xl font-bold text-purple-600">
-                                {formatCurrency(campaign.currentAmount)}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                de {formatCurrency(campaign.goalAmount)}
-                              </div>
+                        {/* Progreso simplificado */}
+                        <div className="space-y-3 mt-auto pt-2">
+                          <div className="flex justify-between items-center">
+                            <div className="text-xl font-bold text-purple-600">
+                              {formatCurrency(campaign.currentAmount)}
                             </div>
-                            <div className="text-right">
-                              <div className="text-xl font-semibold text-gray-700">
-                                {progressPercentage.toFixed(0)}%
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                completado
-                              </div>
+                            <div className="text-sm text-gray-500">
+                              de {formatCurrency(campaign.goalAmount)}
                             </div>
                           </div>
                           
-                          <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                          <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
                             <div
-                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-4 rounded-full transition-all duration-500 shadow-sm"
+                              className="bg-gradient-to-r from-purple-500 to-violet-600 h-3 rounded-full transition-all duration-500 shadow-sm"
                               style={{ width: `${progressPercentage}%` }}
                             />
                           </div>
 
-                          {/* Información adicional mejorada */}
-                          <div className="flex items-center justify-between text-sm text-gray-500 pt-2">
-                            <div className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-purple-400" />
-                              <span className="font-medium">{campaign.donationCount}</span>
-                              <span>donantes</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Calendar className="h-4 w-4 text-purple-400" />
-                              <span>{formatDate(campaign.createdAt)}</span>
-                            </div>
+                          {/* Botón Ver detalles */}
+                          <div className="pt-4 pb-2 flex justify-end">
+                            <Button 
+                              variant="default" 
+                              size="sm" 
+                              className="bg-purple-400 hover:bg-purple-500 text-white px-6 py-2 transition-colors rounded-md font-medium"
+                            >
+                              Ver detalles
+                            </Button>
                           </div>
                         </div>
                       </CardContent>

@@ -125,7 +125,7 @@ export default function ProfilePage() {
                   {user.avatar ? (
                     <Image
                       src={user.avatar}
-                      alt={user.firstName}
+                      alt={user.firstName || user.name || 'Usuario'}
                       width={128}
                       height={128}
                       className="w-full h-full object-cover"
@@ -136,7 +136,10 @@ export default function ProfilePage() {
                     </div>
                   )}
                 </div>
-                <button className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors">
+                <button 
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="absolute bottom-2 right-2 bg-blue-600 text-white p-2 rounded-full hover:bg-blue-700 transition-colors"
+                >
                   <Camera className="w-4 h-4" />
                 </button>
               </div>
@@ -147,11 +150,11 @@ export default function ProfilePage() {
             <div className="flex items-start justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  {user.organizationName || `${user.firstName} ${user.lastName || ''}`}
+                  {user.organizationName || `${user.firstName || user.name || 'Usuario'} ${user.lastName || ''}`}
                 </h1>
                 {user.organizationName && (
                   <p className="text-lg text-gray-600 mt-1">
-                    {user.firstName} {user.lastName}
+                    {user.firstName || user.name || 'Usuario'} {user.lastName || ''}
                   </p>
                 )}
                 <div className="flex items-center gap-4 mt-3">
@@ -316,8 +319,9 @@ export default function ProfilePage() {
         onClose={() => setIsEditModalOpen(false)}
         user={user}
         onUpdate={() => {
-          // Recargar la sesión o actualizar los datos del usuario
-          window.location.reload();
+          console.log('🔄 Profile update callback triggered');
+          // Actualizar los stats después de la actualización del perfil
+          fetchUserStats();
         }}
       />
     </div>

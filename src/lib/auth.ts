@@ -89,6 +89,11 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.userType = user.userType;
         token.isVerified = user.isVerified;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.organizationName = user.organizationName;
+        token.avatar = user.avatar;
+        token.bio = user.bio;
       }
 
       // Si es login con Google, crear o actualizar usuario
@@ -115,6 +120,11 @@ export const authOptions: NextAuthOptions = {
             token.role = newUser.role;
             token.userType = newUser.userType;
             token.isVerified = newUser.isVerified;
+            token.firstName = newUser.firstName;
+            token.lastName = newUser.lastName;
+            token.organizationName = newUser.organizationName;
+            token.avatar = newUser.avatar;
+            token.bio = newUser.bio;
           } else {
             // Actualizar información del usuario existente
             const updatedUser = await prisma.user.update({
@@ -129,6 +139,11 @@ export const authOptions: NextAuthOptions = {
             token.role = updatedUser.role;
             token.userType = updatedUser.userType;
             token.isVerified = updatedUser.isVerified;
+            token.firstName = updatedUser.firstName;
+            token.lastName = updatedUser.lastName;
+            token.organizationName = updatedUser.organizationName;
+            token.avatar = updatedUser.avatar;
+            token.bio = updatedUser.bio;
           }
         } catch (error) {
           console.error('Error al procesar login con Google:', error);
@@ -145,6 +160,11 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as UserRole;
         session.user.userType = token.userType as UserType;
         session.user.isVerified = token.isVerified as boolean;
+        session.user.firstName = token.firstName as string;
+        session.user.lastName = token.lastName as string;
+        session.user.organizationName = token.organizationName as string;
+        session.user.avatar = token.avatar as string;
+        session.user.bio = token.bio as string;
       }
 
       return session;

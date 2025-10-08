@@ -2,21 +2,18 @@
 
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target, Compass, Lightbulb, Sparkles, BarChart3 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Home, HelpCircle, Target, Compass, Lightbulb, Sparkles, BarChart3 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   // Detectar scroll para header flotante
   useEffect(() => {
@@ -28,36 +25,8 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Sincronizar el término de búsqueda con los parámetros de URL
-  useEffect(() => {
-    if (pathname === '/campaigns') {
-      const urlSearchTerm = searchParams.get('search') || '';
-      setSearchTerm(urlSearchTerm);
-    } else {
-      setSearchTerm('');
-    }
-  }, [pathname, searchParams]);
-
   const handleSignOut = async () => {
     await signOut({ callbackUrl: '/' });
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pathname === '/campaigns') {
-      // Si estamos en la página de campañas, actualizar los parámetros de URL
-      const params = new URLSearchParams(searchParams.toString());
-      if (searchTerm.trim()) {
-        params.set('search', searchTerm.trim());
-      } else {
-        params.delete('search');
-      }
-      params.delete('page'); // Resetear a la primera página
-      router.push(`/campaigns?${params.toString()}`);
-    } else {
-      // Si no estamos en campañas, navegar allí con el término de búsqueda
-      router.push(`/campaigns?search=${encodeURIComponent(searchTerm)}`);
-    }
   };
 
   const navigation = [
@@ -66,7 +35,6 @@ export function Navbar() {
     { name: 'Cómo Funciona', href: '/how-it-works', icon: HelpCircle },
   ];
 
-  const isOnCampaignsPage = pathname === '/campaigns';
   const isHomePage = pathname === '/';
 
   return (
@@ -117,8 +85,8 @@ export function Navbar() {
             </button>
           </div>
 
-          {/* Navegación Central */}
-            <div className={`hidden md:flex items-center transition-all duration-300 ${
+          {/* Navegación Central - Ahora ocupa más espacio */}
+            <div className={`hidden md:flex items-center justify-center flex-1 transition-all duration-300 ${
               isHomePage && isScrolled ? 'space-x-6 ml-4' : 'space-x-8 ml-6'
             }`}>
               {navigation.map((item) => {
@@ -144,121 +112,15 @@ export function Navbar() {
               })}
             </div>
 
-          {/* Buscador - Solo en página de campañas */}
-          {isOnCampaignsPage && (
-            <div className="hidden md:flex items-center">
-              <form onSubmit={handleSearch} className="relative">
-                <Input
-                  type="text"
-                  placeholder="Buscar campañas..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-80 h-10 pl-4 pr-12 text-gray-700 bg-white border-2 border-purple-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-                <button 
-                  type="submit"
-                  className="absolute right-0 top-0 h-10 px-3 bg-purple-600 hover:bg-purple-700 rounded-r-lg transition-colors"
-                >
-                  <Search className="h-4 w-4 text-white" />
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* Sección de Usuario */}
-          <div className="flex items-center space-x-3 flex-shrink-0 mr-4">
-            {status === 'loading' ? (
-              <div className="animate-pulse">
-                <div className="h-8 w-20 bg-gray-200 rounded"></div>
-              </div>
-            ) : session ? (
-                <div className="flex items-center space-x-2">
-                  <div className="relative group">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="flex items-center space-x-2 text-purple-400 hover:text-purple-300 hover:bg-white/10 transition-all duration-300 p-2 whitespace-nowrap"
-                   >
-                     <img 
-                        src="/user-icon.svg" 
-                        alt="Usuario" 
-                        className="h-8 w-8" 
-                      />
-                    <span className={`hidden sm:block text-base transition-all duration-300 overflow-hidden ${
-                      isHomePage && isScrolled 
-                        ? 'w-0 opacity-0 ml-0' 
-                        : 'w-auto opacity-100'
-                    }`}>Mi Cuenta</span>
-                  </Button>
-                  
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                    {/* Mostrar Dashboard solo para administradores */}
-                    {session?.user?.role === 'ADMIN' && (
-                      <>
-                        <button
-                          onClick={() => router.push('/admin')}
-                          className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
-                        >
-                          <BarChart3 className="h-6 w-6 mr-3" />
-                          Dashboard
-                        </button>
-                        <hr className="my-1 border-white/20" />
-                      </>
-                    )}
-                    <button
-                      onClick={() => router.push('/my-campaigns')}
-                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
-                    >
-                      <Megaphone className="h-6 w-6 mr-3" />
-                      Mis Campañas
-                    </button>
-                    <button
-                      onClick={() => router.push('/profile')}
-                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
-                    >
-                      <User className="h-6 w-6 mr-3" />
-                      Mi Perfil
-                    </button>
-                    <hr className="my-1 border-white/20" />
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
-                    >
-                      <LogOut className="h-6 w-6 mr-3" />
-                      Cerrar Sesión
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => router.push('/auth/signin')}
-                   className={`${
-                     isHomePage 
-                       ? 'text-gray-700 hover:text-gray-900 hover:bg-purple-100'
-                       : 'text-purple-500 hover:text-purple-600 hover:bg-purple-50'
-                   }`}
-                >
-                  Iniciar Sesión
-                </Button>
-                <Button
-                  onClick={() => router.push('/auth/signup')}
-                   className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  Registrarse
-                </Button>
-              </div>
-            )}
-          </div>
-
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-gray-900 p-3"
+              className={`p-3 transition-colors ${
+                isHomePage 
+                  ? 'text-white hover:text-purple-300' 
+                  : 'text-gray-700 hover:text-gray-900'
+              }`}
             >
               {isMenuOpen ? (
                 <X className="h-7 w-7" />

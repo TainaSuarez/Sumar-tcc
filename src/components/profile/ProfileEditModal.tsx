@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Upload, User } from 'lucide-react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,6 +42,7 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
   const [loading, setLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { update } = useSession();
 
   const {
     register,
@@ -50,7 +52,7 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: user?.firstName || '',
+      firstName: user?.firstName || user?.name || '',
       lastName: user?.lastName || '',
       organizationName: user?.organizationName || '',
       bio: user?.bio || '',
@@ -110,17 +112,29 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
   };
 
   const onSubmit = async (data: ProfileFormData) => {
+    console.log('🔵 Profile form submission started');
+    console.log('📝 Form data:', data);
+    
     setLoading(true);
     try {
       let avatarUrl = user?.avatar;
 
       // Subir avatar si hay uno nuevo
       if (avatarFile) {
+        console.log('📸 Uploading new avatar...');
         const uploadedUrl = await uploadAvatar();
         if (uploadedUrl) {
           avatarUrl = uploadedUrl;
+          console.log('✅ Avatar uploaded:', avatarUrl);
         }
       }
+
+      const requestBody = {
+        ...data,
+        avatar: avatarUrl,
+      };
+      
+      console.log('📤 Sending request to API:', requestBody);
 
       // Actualizar perfil
       const response = await fetch('/api/user/profile', {
@@ -128,13 +142,34 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          avatar: avatarUrl,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('📥 API response status:', response.status);
+
       if (response.ok) {
+        const responseData = await response.json();
+        console.log('✅ Profile updated successfully:', responseData);
+        
+        // Actualizar la sesión con los nuevos datos
+        if (update) {
+          await update({
+            id: responseData.user.id,
+            email: responseData.user.email,
+            name: `${responseData.user.firstName} ${responseData.user.lastName}`.trim(),
+            image: responseData.user.avatar,
+            firstName: responseData.user.firstName,
+            lastName: responseData.user.lastName,
+            avatar: responseData.user.avatar,
+            organizationName: responseData.user.organizationName,
+            bio: responseData.user.bio,
+            phone: responseData.user.phone,
+            address: responseData.user.address,
+            city: responseData.user.city,
+          });
+          console.log('✅ Session updated successfully');
+        }
+        
         toast.success('Perfil actualizado correctamente');
         onUpdate();
         onClose();
@@ -143,10 +178,11 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
         setAvatarPreview(null);
       } else {
         const errorData = await response.json();
+        console.log('❌ API error:', errorData);
         toast.error(errorData.error || 'Error al actualizar el perfil');
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('❌ Error updating profile:', error);
       toast.error('Error al actualizar el perfil');
     } finally {
       setLoading(false);
@@ -185,7 +221,7 @@ export function ProfileEditModal({ isOpen, onClose, user, onUpdate }: ProfileEdi
                 ) : user?.avatar ? (
                   <Image
                     src={user.avatar}
-                    alt={user.firstName}
+                    alt={user.firstName || user.name || 'Usuario'}
                     width={96}
                     height={96}
                     className="w-full h-full object-cover"

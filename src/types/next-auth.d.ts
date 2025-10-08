@@ -8,6 +8,10 @@ declare module 'next-auth' {
       email: string;
       name: string;
       firstName?: string;
+      lastName?: string;
+      organizationName?: string;
+      avatar?: string;
+      bio?: string;
       image?: string;
       role: UserRole;
       userType: UserType;
@@ -20,6 +24,10 @@ declare module 'next-auth' {
     email: string;
     name: string;
     firstName?: string;
+    lastName?: string;
+    organizationName?: string;
+    avatar?: string;
+    bio?: string;
     image?: string;
     role: UserRole;
     userType: UserType;
@@ -32,5 +40,10 @@ declare module 'next-auth/jwt' {
     role: UserRole;
     userType: UserType;
     isVerified: boolean;
+    firstName?: string;
+    lastName?: string;
+    organizationName?: string;
+    avatar?: string;
+    bio?: string;
   }
 }
