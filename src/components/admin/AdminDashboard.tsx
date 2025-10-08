@@ -100,15 +100,33 @@ export function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/admin/stats');
+      console.log('🔍 Iniciando carga de estadísticas...');
       
+      const response = await fetch('/api/admin/stats', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Incluir cookies de sesión
+      });
+      
+      console.log('📡 Respuesta recibida:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        throw new Error('Error al cargar las estadísticas');
+        const errorText = await response.text();
+        console.error('❌ Error en la respuesta:', errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('✅ Datos recibidos:', data);
       setStats(data);
     } catch (err) {
+      console.error('❌ Error en fetchStats:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setLoading(false);

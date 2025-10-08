@@ -81,7 +81,7 @@ const features = [
   }
 ];
 
-export default function HowItWorksPage() {
+const HowItWorksPage = () => {
   const [activeStep, setActiveStep] = useState(1);
 
   return (
@@ -200,36 +200,38 @@ export default function HowItWorksPage() {
       {/* Features Section */}
       <div className="bg-purple-50 py-24">
         <div className="max-w-screen-2xl mx-auto px-6 sm:px-8 lg:px-16 xl:px-24 2xl:px-32">
-          <div className="mb-20">
-            <h2 className="text-4xl md:text-5xl font-light text-purple-700 mb-6">
-              ¿Por qué elegir Sumar+?
-            </h2>
-            <p className="text-xl text-gray-700 max-w-4xl">
-              Nuestra plataforma garantiza los más altos estándares de seguridad, transparencia y confianza
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-10">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="bg-white p-10 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors shadow-sm hover:shadow-md ring-1 ring-purple-100">
-                  <div className="flex items-start gap-6">
-                    <div className="bg-purple-600 p-4 rounded-xl flex-shrink-0">
-                      <Icon className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-medium text-purple-800 mb-3">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-20 text-center">
+              <h2 className="text-4xl md:text-5xl font-light text-purple-700 mb-6">
+                ¿Por qué elegir Sumar+?
+              </h2>
+              <p className="text-xl text-gray-700 max-w-4xl mx-auto">
+                Nuestra plataforma garantiza los más altos estándares de seguridad, transparencia y confianza
+              </p>
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-10">
+              {features.map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={index} className="bg-white p-12 rounded-xl border border-purple-200 hover:border-purple-300 transition-colors shadow-sm hover:shadow-md ring-1 ring-purple-100 min-h-[280px] flex flex-col">
+                    <div className="flex items-center gap-6 mb-6">
+                      <div className="bg-purple-600 p-3 rounded-xl flex-shrink-0">
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-xl font-medium text-purple-800 leading-tight">
                         {feature.title}
                       </h3>
+                    </div>
+                    <div className="flex-1">
                       <p className="text-lg text-gray-700 leading-relaxed">
                         {feature.description}
                       </p>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -267,3 +269,5 @@ export default function HowItWorksPage() {
     </div>
   );
 }
+
+export default HowItWorksPage;

@@ -7,63 +7,86 @@ import { createCampaignSchema } from '@/lib/validations/campaign';
 import { CampaignService } from '@/lib/services/campaignService';
 import { handleMultipleFileUpload, getPublicImageUrl } from '@/lib/services/uploadService';
 import { CampaignStatus } from '@prisma/client';
-
-// Esquema para validar FormData
-const formDataSchema = z.object({
-  title: z.string().min(3).max(100),
-  categoryId: z.string().min(1),
-  goalAmount: z.string().transform((val) => parseFloat(val)),
-  shortDescription: z.string().min(10).max(150),
-  description: z.string().min(50).max(5000),
-});
+import { prisma } from '@/lib/db';
 
 /**
  * POST /api/campaigns
  * Crea una nueva campaña
  */
 export async function POST(request: NextRequest) {
+  console.log('🚀 [API] Iniciando creación de campaña');
+  
   try {
     // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      console.log('❌ [API] Usuario no autenticado');
       return NextResponse.json(
-        { error: 'No autorizado. Debes iniciar sesión para crear una campaña.' },
+        { error: 'No autorizado' },
         { status: 401 }
       );
     }
 
-    // Manejar FormData y múltiples archivos
+    console.log('✅ [API] Usuario autenticado:', session.user.id);
+
+    // Procesar FormData y archivos
     const uploadResult = await handleMultipleFileUpload(request);
-    
+
+    console.log('📁 [API] Resultado del upload:', {
+      hasError: !!uploadResult.error,
+      filesCount: uploadResult.files?.length || 0,
+      fieldsReceived: Object.keys(uploadResult.fields || {}),
+      error: uploadResult.error || 'ninguno'
+    });
+
     if (uploadResult.error) {
+      console.log('❌ [API] Error en upload:', uploadResult.error);
       return NextResponse.json(
         { error: uploadResult.error },
         { status: 400 }
       );
     }
 
-    const { files, fields } = uploadResult;
-    
-    // Validar campos básicos
-    const validationResult = formDataSchema.safeParse({
+    const { fields, files } = uploadResult;
+
+    console.log('📋 [API] Campos recibidos:', {
       title: fields.title,
       categoryId: fields.categoryId,
       goalAmount: fields.goalAmount,
-      shortDescription: fields.shortDescription,
-      description: fields.description,
+      shortDescription: fields.shortDescription?.substring(0, 50) + '...',
+      description: fields.description?.substring(0, 50) + '...',
     });
 
-    if (!validationResult.success) {
-      // Limpiar archivos subidos si hay error de validación
+    console.log('🖼️ [API] Archivos procesados:', files.map(f => ({
+      filename: f.filename,
+      originalName: f.originalName,
+      size: f.size,
+    })));
+
+    // Validar campos básicos
+    const formDataSchema = z.object({
+      title: z.string().min(1, 'El título es requerido'),
+      categoryId: z.string().min(1, 'La categoría es requerida'),
+      goalAmount: z.string().min(1, 'La meta de recaudación es requerida'),
+      shortDescription: z.string().min(1, 'La descripción corta es requerida'),
+      description: z.string().min(1, 'La descripción es requerida'),
+    });
+
+    const validation = formDataSchema.safeParse(fields);
+    if (!validation.success) {
+      console.log('❌ [API] Error de validación de campos:', validation.error.issues);
+      
+      // Limpiar archivos subidos si hay error
       if (files.length > 0) {
         const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
         await deleteMultipleUploadedFiles(files.map(f => f.filename));
+        console.log('🧹 [API] Archivos limpiados después de error de validación');
       }
       
       return NextResponse.json(
         {
-          error: 'Datos de entrada inválidos',
-          details: validationResult.error.issues.map(err => ({
+          error: 'Datos inválidos',
+          details: validation.error.issues.map(err => ({
             field: err.path.join('.'),
             message: err.message,
           })),
@@ -72,19 +95,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { goalAmount } = validationResult.data;
+    // Convertir goalAmount a número
+    const goalAmount = parseFloat(fields.goalAmount);
+    if (isNaN(goalAmount) || goalAmount <= 0) {
+      console.log('❌ [API] Meta de recaudación inválida:', fields.goalAmount);
+      
+      // Limpiar archivos subidos si hay error
+      if (files.length > 0) {
+        const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
+        await deleteMultipleUploadedFiles(files.map(f => f.filename));
+        console.log('🧹 [API] Archivos limpiados después de error de meta');
+      }
+      
+      return NextResponse.json(
+        { error: 'La meta de recaudación debe ser un número válido mayor a 0' },
+        { status: 400 }
+      );
+    }
 
-    // Verificar que la categoría existe
-    const { prisma } = await import('@/lib/db');
+    console.log('💰 [API] Meta de recaudación válida:', goalAmount);
+
+    // Verificar que la categoría existe y está activa
     const category = await prisma.category.findUnique({
       where: { id: fields.categoryId },
     });
 
     if (!category) {
+      console.log('❌ [API] Categoría no encontrada:', fields.categoryId);
+      
       // Limpiar archivos subidos si hay error
       if (files.length > 0) {
         const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
         await deleteMultipleUploadedFiles(files.map(f => f.filename));
+        console.log('🧹 [API] Archivos limpiados después de error de categoría');
       }
       
       return NextResponse.json(
@@ -94,10 +137,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (!category.isActive) {
+      console.log('❌ [API] Categoría inactiva:', fields.categoryId);
+      
       // Limpiar archivos subidos si hay error
       if (files.length > 0) {
         const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
         await deleteMultipleUploadedFiles(files.map(f => f.filename));
+        console.log('🧹 [API] Archivos limpiados después de error de categoría inactiva');
       }
       
       return NextResponse.json(
@@ -106,8 +152,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('✅ [API] Categoría válida:', category.name);
+
     // Preparar URLs de las imágenes
     const imageUrls = files.map(file => getPublicImageUrl(file.filename));
+    console.log('🔗 [API] URLs de imágenes generadas:', imageUrls);
 
     // Preparar datos para crear la campaña
     const campaignData = {
@@ -120,6 +169,12 @@ export async function POST(request: NextRequest) {
       images: imageUrls,
     };
 
+    console.log('📝 [API] Datos preparados para crear campaña:', {
+      ...campaignData,
+      description: campaignData.description.substring(0, 50) + '...',
+      shortDescription: campaignData.shortDescription.substring(0, 50) + '...',
+    });
+
     // Validar datos con el esquema completo (omitir coverImage y additionalImages ya que se manejan por separado)
     const finalValidation = createCampaignSchema.omit({ coverImage: true, additionalImages: true }).safeParse({
       title: campaignData.title,
@@ -130,10 +185,13 @@ export async function POST(request: NextRequest) {
     });
 
     if (!finalValidation.success) {
+      console.log('❌ [API] Error de validación final:', finalValidation.error.issues);
+      
       // Limpiar archivos subidos si hay error
       if (files.length > 0) {
         const { deleteMultipleUploadedFiles } = await import('@/lib/services/uploadService');
         await deleteMultipleUploadedFiles(files.map(f => f.filename));
+        console.log('🧹 [API] Archivos limpiados después de error de validación final');
       }
       
       return NextResponse.json(
@@ -148,8 +206,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('✅ [API] Validación final exitosa');
+
     // Crear la campaña
+    console.log('🔄 [API] Iniciando creación de campaña en base de datos...');
     const campaign = await CampaignService.create(campaignData);
+    console.log('✅ [API] Campaña creada exitosamente:', {
+      id: campaign.id,
+      title: campaign.title,
+      slug: campaign.slug,
+      imagesCount: campaign.images?.length || 0,
+    });
 
     // Respuesta exitosa
     return NextResponse.json(
@@ -174,7 +241,11 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('Error en POST /api/campaigns:', error);
+    console.error('💥 [API] Error en POST /api/campaigns:', {
+      message: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
 
     // Error específico de validación o negocio
     if (error instanceof Error) {
@@ -281,23 +352,36 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      campaigns: campaigns.map(campaign => ({
-        id: campaign.id,
-        title: campaign.title,
-        slug: campaign.slug,
-        shortDescription: campaign.shortDescription,
-        goalAmount: campaign.goalAmount,
-        currentAmount: campaign.currentAmount,
-        currency: campaign.currency,
-        status: campaign.status,
-        images: campaign.images,
-        category: campaign.category,
-        creator: campaign.creator,
-        donationCount: campaign._count.donations,
-        isFeatured: campaign.isFeatured,
-        createdAt: campaign.createdAt,
-        updatedAt: campaign.updatedAt,
-      })),
+      campaigns: campaigns.map(campaign => {
+        // Parsear las imágenes de JSON string a array
+        let images: string[] = [];
+        if (campaign.images) {
+          try {
+            images = JSON.parse(campaign.images);
+          } catch (error) {
+            console.error('Error parsing images JSON for campaign:', campaign.id, error);
+            images = [];
+          }
+        }
+
+        return {
+          id: campaign.id,
+          title: campaign.title,
+          slug: campaign.slug,
+          shortDescription: campaign.shortDescription,
+          goalAmount: campaign.goalAmount,
+          currentAmount: campaign.currentAmount,
+          currency: campaign.currency,
+          status: campaign.status,
+          images: images,
+          category: campaign.category,
+          creator: campaign.creator,
+          donationCount: campaign._count.donations,
+          isFeatured: campaign.isFeatured,
+          createdAt: campaign.createdAt,
+          updatedAt: campaign.updatedAt,
+        };
+      }),
       pagination: {
         page,
         limit,

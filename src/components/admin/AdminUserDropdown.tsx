@@ -12,13 +12,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User, Settings, BarChart3 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function AdminUserDropdown() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   const handleSignOut = () => {
     signOut({ callbackUrl: '/' });
+  };
+
+  const handleDashboardAccess = () => {
+    router.push('/admin');
   };
 
   const getUserInitials = (name: string) => {
@@ -74,6 +80,14 @@ export function AdminUserDropdown() {
           </DropdownMenuLabel>
           
           <DropdownMenuSeparator />
+          
+          <DropdownMenuItem 
+            className="cursor-pointer"
+            onClick={handleDashboardAccess}
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
+          </DropdownMenuItem>
           
           <DropdownMenuItem className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />

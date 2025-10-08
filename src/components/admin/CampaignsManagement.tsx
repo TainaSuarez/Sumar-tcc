@@ -700,7 +700,7 @@ export function CampaignsManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {campaigns.map((campaign) => (
+            {campaigns && campaigns.length > 0 ? campaigns.map((campaign) => (
               <div key={campaign.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
                 <div className="flex items-start justify-between">
                   {/* Información principal */}
@@ -712,7 +712,7 @@ export function CampaignsManagement() {
                     
                     {/* Imagen de la campaña */}
                     <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                      {campaign.images[0] ? (
+                      {campaign.images && campaign.images.length > 0 && campaign.images[0] ? (
                         <img 
                           src={campaign.images[0]} 
                           alt={campaign.title}
@@ -906,9 +906,13 @@ export function CampaignsManagement() {
                   </DropdownMenu>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-12 text-gray-500">
+                {loading ? 'Cargando campañas...' : 'No se encontraron campañas'}
+              </div>
+            )}
 
-            {campaigns.length === 0 && (
+            {campaigns && campaigns.length === 0 && !loading && (
               <div className="text-center py-12 text-gray-500">
                 No se encontraron campañas
               </div>
@@ -980,7 +984,7 @@ export function CampaignsManagement() {
                     <CardContent className="space-y-4">
                       <div className="flex items-center gap-4">
                         <div className="w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
-                          {selectedCampaign.images[0] ? (
+                          {selectedCampaign.images && selectedCampaign.images.length > 0 && selectedCampaign.images[0] ? (
                             <img 
                               src={selectedCampaign.images[0]} 
                               alt={selectedCampaign.title}

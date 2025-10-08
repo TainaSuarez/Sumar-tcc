@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Campaign Creation</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .result { margin-top: 20px; padding: 10px; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    </style>
+</head>
+<body>
+    <h1>Test Campaign Creation</h1>
+    <form id="campaignForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="title">Título:</label>
+            <input type="text" id="title" name="title" value="Campaña de Prueba" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="categoryId">Categoría ID:</label>
+            <input type="text" id="categoryId" name="categoryId" value="cmg5im1j80000u8ygf17y78kr" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="goalAmount">Meta de Recaudación:</label>
+            <input type="number" id="goalAmount" name="goalAmount" value="10000" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="shortDescription">Descripción Corta:</label>
+            <textarea id="shortDescription" name="shortDescription" rows="2" required>Esta es una campaña de prueba para diagnosticar problemas.</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="description">Descripción:</label>
+            <textarea id="description" name="description" rows="4" required>Esta es una descripción más larga para la campaña de prueba. Necesitamos al menos 50 caracteres para que pase la validación del sistema.</textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="images">Imágenes (opcional):</label>
+            <input type="file" id="images" name="images" multiple accept="image/*">
+        </div>
+        
+        <button type="submit">Crear Campaña</button>
+    </form>
+    
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('campaignForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Enviando...</p>';
+            
+            const formData = new FormData(this);
+            
+            try {
+                const response = await fetch('/api/campaigns', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>¡Éxito!</h3>
+                            <p>Campaña creada: ${data.campaign.title}</p>
+                            <p>ID: ${data.campaign.id}</p>
+                            <p>Slug: ${data.campaign.slug}</p>
+                            <p>Imágenes: ${data.campaign.images ? data.campaign.images.length : 0}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>Error</h3>
+                            <p><strong>Status:</strong> ${response.status}</p>
+                            <p><strong>Error:</strong> ${data.error}</p>
+                            ${data.details ? `<pre>${JSON.stringify(data.details, null, 2)}</pre>` : ''}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>Error de Red</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

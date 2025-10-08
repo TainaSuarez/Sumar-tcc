@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Creación de Actualización</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+        button {
+            background-color: #7c3aed;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #6d28d9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+        }
+        .info {
+            background-color: #dbeafe;
+            border: 1px solid #3b82f6;
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>🔄 Prueba de Creación de Actualización</h1>
+        
+        <div class="info">
+            <strong>Instrucciones:</strong><br>
+            1. Completa el formulario con los datos de la actualización<br>
+            2. Opcionalmente sube una imagen<br>
+            3. Haz clic en "Crear Actualización" para probar<br>
+            4. Revisa los logs del servidor en la terminal
+        </div>
+
+        <form id="updateForm">
+            <div class="form-group">
+                <label for="campaignId">ID de Campaña:</label>
+                <input type="text" id="campaignId" name="campaignId" 
+                       value="cmg5im1pq0003u8ygxxaq2ij1"
+                       placeholder="Ingresa el ID de una campaña existente" required>
+                <small>Campaña: "Ayuda médica urgente" (ACTIVE)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Título de la Actualización:</label>
+                <input type="text" id="title" name="title" 
+                       value="Progreso importante en nuestra campaña" required>
+            </div>
+
+            <div class="form-group">
+                <label for="content">Contenido:</label>
+                <textarea id="content" name="content" required>¡Hola a todos!
+
+Queremos compartir con ustedes las últimas novedades de nuestra campaña. Gracias a su apoyo, hemos logrado avances significativos en nuestro proyecto.
+
+Estamos muy agradecidos por la confianza que han depositado en nosotros y queremos mantenerlos informados sobre cada paso que damos.
+
+¡Sigamos adelante juntos!</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="type">Tipo de Actualización:</label>
+                <select id="type" name="type" required>
+                    <option value="TEXT_ONLY">Solo Texto</option>
+                    <option value="TEXT_IMAGE">Texto con Imagen</option>
+                    <option value="TEXT_VIDEO">Texto con Video</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="isPublic">¿Es pública?</label>
+                <select id="isPublic" name="isPublic" required>
+                    <option value="true">Sí, pública</option>
+                    <option value="false">No, privada</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="images">Imagen (opcional):</label>
+                <input type="file" id="images" name="images" accept="image/*" multiple>
+                <small>Máximo 5 imágenes, 5MB cada una</small>
+            </div>
+
+            <div class="form-group">
+                <label for="videos">Video (opcional):</label>
+                <input type="file" id="videos" name="videos" accept="video/*">
+                <small>Máximo 1 video, 10MB</small>
+            </div>
+
+            <button type="submit">Crear Actualización</button>
+            <button type="button" onclick="clearForm()">Limpiar</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        document.getElementById('updateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const campaignId = document.getElementById('campaignId').value;
+            
+            if (!campaignId) {
+                showResult('Por favor ingresa un ID de campaña válido', 'error');
+                return;
+            }
+
+            // Agregar campos de texto
+            formData.append('title', document.getElementById('title').value);
+            formData.append('content', document.getElementById('content').value);
+            formData.append('type', document.getElementById('type').value);
+            formData.append('isPublic', document.getElementById('isPublic').value);
+
+            // Agregar imágenes
+            const imagesInput = document.getElementById('images');
+            if (imagesInput.files) {
+                for (let i = 0; i < imagesInput.files.length; i++) {
+                    formData.append('images', imagesInput.files[i]);
+                }
+            }
+
+            // Agregar video
+            const videoInput = document.getElementById('videos');
+            if (videoInput.files && videoInput.files[0]) {
+                formData.append('videos', videoInput.files[0]);
+            }
+
+            try {
+                showResult('Enviando actualización...', 'info');
+                
+                const response = await fetch(`/api/campaigns/${campaignId}/updates`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResult(`✅ Actualización creada exitosamente!<br><br><strong>ID:</strong> ${result.update?.id || 'N/A'}<br><strong>Título:</strong> ${result.update?.title || 'N/A'}`, 'success');
+                } else {
+                    showResult(`❌ Error: ${result.error || 'Error desconocido'}<br><br><strong>Detalles:</strong> ${JSON.stringify(result.details || {}, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Error de conexión: ${error.message}`, 'error');
+            }
+        });
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+        }
+
+        function clearForm() {
+            document.getElementById('updateForm').reset();
+            document.getElementById('result').style.display = 'none';
+        }
+
+        // Sugerir un ID de campaña si hay uno en localStorage
+        window.addEventListener('load', function() {
+            const lastCampaignId = localStorage.getItem('lastCampaignId');
+            if (lastCampaignId) {
+                document.getElementById('campaignId').value = lastCampaignId;
+            }
+        });
+
+        // Guardar el ID de campaña usado
+        document.getElementById('campaignId').addEventListener('change', function() {
+            localStorage.setItem('lastCampaignId', this.value);
+        });
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target, Compass, Lightbulb, Sparkles } from 'lucide-react';
+import { Menu, X, Heart, User, LogOut, Settings, Megaphone, Search, ShoppingCart, Plus, Home, HelpCircle, Target, Compass, Lightbulb, Sparkles, BarChart3 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -193,6 +193,19 @@ export function Navbar() {
                   
                   {/* Dropdown Menu */}
                   <div className="absolute right-0 mt-2 w-48 bg-gray-900/95 backdrop-blur-md rounded-md shadow-lg py-1 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                    {/* Mostrar Dashboard solo para administradores */}
+                    {session?.user?.role === 'ADMIN' && (
+                      <>
+                        <button
+                          onClick={() => router.push('/admin')}
+                          className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"
+                        >
+                          <BarChart3 className="h-6 w-6 mr-3" />
+                          Dashboard
+                        </button>
+                        <hr className="my-1 border-white/20" />
+                      </>
+                    )}
                     <button
                       onClick={() => router.push('/my-campaigns')}
                       className="flex items-center px-4 py-3 text-base text-white hover:bg-white/10 w-full text-left"

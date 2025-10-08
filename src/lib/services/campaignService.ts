@@ -3,6 +3,16 @@ import { type CreateCampaignData } from '@/types/campaign';
 import { getPublicImageUrl } from './uploadService';
 import { CampaignType, CampaignStatus, type Campaign } from '@prisma/client';
 
+interface CreateCampaignInput {
+  title: string;
+  shortDescription: string;
+  description: string;
+  goalAmount: number;
+  categoryId: string;
+  creatorId: string;
+  images?: string[];
+}
+
 
 
 export interface CreateCampaignResult extends Campaign {
@@ -55,7 +65,141 @@ async function ensureUniqueSlug(baseSlug: string): Promise<string> {
 
 export class CampaignService {
   /**
+   * Genera un slug único basado en el título
+   */
+  private generateSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remover acentos
+      .replace(/[^a-z0-9\s-]/g, '') // Solo letras, números, espacios y guiones
+      .trim()
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+      .replace(/-+/g, '-'); // Remover guiones duplicados
+  }
+
+  /**
+   * Asegura que el slug sea único
+   */
+  private async generateUniqueSlug(baseSlug: string): Promise<string> {
+    let slug = baseSlug;
+    let counter = 1;
+
+    while (true) {
+      const existing = await prisma.campaign.findUnique({
+        where: { slug },
+      });
+
+      if (!existing) {
+        return slug;
+      }
+
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+  }
+
+  /**
    * Crea una nueva campaña
+   */
+  async create(data: CreateCampaignInput): Promise<Campaign> {
+    console.log('🏗️ [CampaignService] Iniciando creación de campaña:', {
+      title: data.title,
+      categoryId: data.categoryId,
+      creatorId: data.creatorId,
+      goalAmount: data.goalAmount,
+      imagesCount: data.images?.length || 0,
+    });
+
+    try {
+      // Generar slug único
+      const baseSlug = this.generateSlug(data.title);
+      const slug = await this.generateUniqueSlug(baseSlug);
+      
+      console.log('🔗 [CampaignService] Slug generado:', slug);
+
+      // Crear la campaña en la base de datos
+      console.log('💾 [CampaignService] Creando campaña en base de datos...');
+      
+      const campaign = await prisma.campaign.create({
+        data: {
+          title: data.title,
+          slug,
+          shortDescription: data.shortDescription,
+          description: data.description,
+          goalAmount: data.goalAmount,
+          categoryId: data.categoryId,
+          creatorId: data.creatorId,
+          images: data.images || [],
+          status: CampaignStatus.DRAFT,
+        },
+        include: {
+          category: true,
+          creator: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+              userType: true,
+              organizationName: true,
+            },
+          },
+          _count: {
+            select: {
+              donations: true,
+              updates: true,
+              favorites: true,
+            },
+          },
+        },
+      });
+
+      console.log('✅ [CampaignService] Campaña creada exitosamente en BD:', {
+        id: campaign.id,
+        slug: campaign.slug,
+        title: campaign.title,
+        imagesStored: campaign.images?.length || 0,
+        status: campaign.status,
+      });
+
+      return campaign;
+    } catch (error) {
+      console.error('💥 [CampaignService] Error al crear campaña:', {
+        message: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        data: {
+          title: data.title,
+          categoryId: data.categoryId,
+          creatorId: data.creatorId,
+          imagesCount: data.images?.length || 0,
+        },
+        timestamp: new Date().toISOString(),
+      });
+
+      // Limpiar imágenes subidas si hay error
+      if (data.images && data.images.length > 0) {
+        console.log('🧹 [CampaignService] Limpiando imágenes después de error...');
+        try {
+          const { deleteMultipleUploadedFiles } = await import('./uploadService');
+          // Extraer nombres de archivo de las URLs
+          const filenames = data.images.map(url => {
+            const parts = url.split('/');
+            return parts[parts.length - 1];
+          });
+          await deleteMultipleUploadedFiles(filenames);
+          console.log('✅ [CampaignService] Imágenes limpiadas exitosamente');
+        } catch (cleanupError) {
+          console.error('❌ [CampaignService] Error al limpiar imágenes:', cleanupError);
+        }
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Crea una nueva campaña (método estático para compatibilidad)
    */
   static async create(data: CreateCampaignData): Promise<CreateCampaignResult> {
     try {
@@ -82,9 +226,9 @@ export class CampaignService {
           description: data.description,
           shortDescription: data.shortDescription,
           goalAmount: data.goalAmount,
-                  currency: 'UYU',
-        type: CampaignType.DONATION, // Por defecto es donación
-        status: CampaignStatus.ACTIVE, // Por defecto está activa
+          currency: 'UYU',
+          type: CampaignType.DONATION, // Por defecto es donación
+          status: CampaignStatus.ACTIVE, // Por defecto está activa
           images: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
           creatorId: data.creatorId,
           categoryId: data.categoryId,

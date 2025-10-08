@@ -6,10 +6,19 @@ import { UserRole } from '@prisma/client';
 
 export async function GET() {
   try {
+    console.log('🔍 [API] Iniciando endpoint /api/admin/stats');
+    
     // Verificar autenticación
     const session = await getServerSession(authOptions);
+    console.log('🔐 [API] Sesión obtenida:', { 
+      hasSession: !!session, 
+      hasUser: !!session?.user,
+      userEmail: session?.user?.email,
+      userRole: session?.user?.role 
+    });
     
     if (!session?.user) {
+      console.log('❌ [API] No hay sesión de usuario');
       return NextResponse.json(
         { error: 'No autorizado' },
         { status: 401 }
@@ -18,11 +27,14 @@ export async function GET() {
 
     // Verificar que el usuario sea administrador
     if (session.user.role !== UserRole.ADMIN) {
+      console.log('❌ [API] Usuario no es admin:', session.user.role);
       return NextResponse.json(
         { error: 'Acceso denegado. Se requieren permisos de administrador.' },
         { status: 403 }
       );
     }
+
+    console.log('✅ [API] Usuario autorizado, ejecutando consultas...');
 
     // Obtener estadísticas generales
     const [
@@ -105,16 +117,16 @@ export async function GET() {
         _count: true
       }),
       
-      // Donaciones por mes (últimos 6 meses)
+      // Donaciones por mes (últimos 6 meses) - Compatible con SQLite
       prisma.$queryRaw`
         SELECT 
-          DATE_TRUNC('month', "createdAt") as month,
-          COUNT(*)::integer as count,
-          SUM("amount")::float as total
-        FROM "donations" 
-        WHERE "createdAt" >= NOW() - INTERVAL '6 months'
-          AND "status" = 'COMPLETED'
-        GROUP BY DATE_TRUNC('month', "createdAt")
+          strftime('%Y-%m', createdAt) as month,
+          COUNT(*) as count,
+          SUM(amount) as total
+        FROM donations 
+        WHERE createdAt >= datetime('now', '-6 months')
+          AND status = 'COMPLETED'
+        GROUP BY strftime('%Y-%m', createdAt)
         ORDER BY month DESC
       `
     ]);
@@ -169,12 +181,16 @@ export async function GET() {
       }
     };
 
+    console.log('📊 [API] Consultas completadas, construyendo respuesta...');
+
     return NextResponse.json(stats);
 
   } catch (error) {
-    console.error('Error al obtener estadísticas de admin:', error);
+    console.error('❌ [API] Error al obtener estadísticas de admin:', error);
+    console.error('❌ [API] Stack trace:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('❌ [API] Error message:', error instanceof Error ? error.message : String(error));
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor', details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }

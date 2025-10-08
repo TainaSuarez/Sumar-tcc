@@ -30,15 +30,26 @@ export class CampaignUpdateService {
     files?: ProcessedFiles
   ): Promise<CreateUpdateResult> {
     try {
+      console.log('🔄 Iniciando creación de actualización:', {
+        campaignId: data.campaignId,
+        authorId: data.authorId,
+        title: data.title,
+        hasFiles: !!files,
+        imagesCount: files?.images?.length || 0,
+        videosCount: files?.videos?.length || 0
+      });
+
       // Generar URLs de archivos si existen
       let imageUrls: string[] = [];
       let videoUrls: string[] = [];
 
       if (files?.images) {
+        console.log('📸 Procesando imágenes:', files.images.map(img => img.filename));
         imageUrls = files.images.map(img => getPublicUpdateImageUrl(img.filename));
       }
 
       if (files?.videos) {
+        console.log('🎥 Procesando videos:', files.videos.map(vid => vid.filename));
         videoUrls = files.videos.map(vid => getPublicUpdateVideoUrl(vid.filename));
       }
 
@@ -49,6 +60,17 @@ export class CampaignUpdateService {
       } else if (imageUrls.length > 0) {
         updateType = UpdateType.TEXT_IMAGE;
       }
+
+      console.log('📝 Datos para crear actualización:', {
+        title: data.title,
+        content: data.content.substring(0, 50) + '...',
+        type: updateType,
+        imageUrls: imageUrls.length,
+        videoUrls: videoUrls.length,
+        isPublic: data.isPublic,
+        campaignId: data.campaignId,
+        authorId: data.authorId
+      });
 
       // Crear actualización en la base de datos
       const update = await prisma.campaignUpdate.create({
@@ -75,6 +97,8 @@ export class CampaignUpdateService {
         },
       });
 
+      console.log('✅ Actualización creada exitosamente:', update.id);
+
       return {
         id: update.id,
         title: update.title,
@@ -90,10 +114,17 @@ export class CampaignUpdateService {
         author: update.author,
       };
     } catch (error) {
-      console.error('Error creando actualización:', error);
+      console.error('❌ Error creando actualización:', {
+        error: error instanceof Error ? error.message : 'Error desconocido',
+        stack: error instanceof Error ? error.stack : undefined,
+        campaignId: data?.campaignId,
+        authorId: data?.authorId,
+        hasFiles: !!files
+      });
 
       // Limpiar archivos subidos si hay error
       if (files) {
+        console.log('🧹 Limpiando archivos subidos debido al error...');
         await cleanupUpdateFiles(
           files.images.map(img => ({ ...img, path: '', size: 0, mimetype: '' })),
           files.videos.map(vid => ({ ...vid, path: '', size: 0, mimetype: '' }))

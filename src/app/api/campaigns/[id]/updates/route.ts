@@ -25,21 +25,29 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    console.log('🚀 Iniciando POST /api/campaigns/[id]/updates');
+    
     // Verificar autenticación
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) {
+      console.log('❌ Usuario no autenticado');
       return NextResponse.json(
         { error: 'No autorizado. Debes iniciar sesión para crear una actualización.' },
         { status: 401 }
       );
     }
 
+    console.log('✅ Usuario autenticado:', session.user.id);
+
     const resolvedParams = await params;
     const campaignId = resolvedParams.id;
+
+    console.log('📋 Procesando campaña:', campaignId);
 
     // Verificar que la campaña existe y pertenece al usuario
     const campaign = await CampaignService.getById(campaignId);
     if (!campaign) {
+      console.log('❌ Campaña no encontrada:', campaignId);
       return NextResponse.json(
         { error: 'Campaña no encontrada' },
         { status: 404 }
@@ -47,16 +55,24 @@ export async function POST(
     }
 
     if (campaign.creator.id !== session.user.id) {
+      console.log('❌ Usuario sin permisos:', {
+        userId: session.user.id,
+        creatorId: campaign.creator.id
+      });
       return NextResponse.json(
         { error: 'No tienes permisos para crear actualizaciones en esta campaña' },
         { status: 403 }
       );
     }
 
+    console.log('✅ Permisos verificados correctamente');
+
     // Manejar FormData y archivos
+    console.log('📁 Procesando archivos...');
     const uploadResult = await handleUpdateFileUpload(request);
 
     if (uploadResult.error) {
+      console.log('❌ Error en upload de archivos:', uploadResult.error);
       return NextResponse.json(
         { error: uploadResult.error },
         { status: 400 }
@@ -66,9 +82,9 @@ export async function POST(
     const { images, videos, fields } = uploadResult;
 
     // Log para debug
-    console.log('Fields recibidos:', fields);
-    console.log('Images:', images.length);
-    console.log('Videos:', videos.length);
+    console.log('📝 Fields recibidos:', fields);
+    console.log('📸 Images:', images.length);
+    console.log('🎥 Videos:', videos.length);
 
     // Validar campos básicos
     const validationResult = formDataSchema.safeParse({
@@ -147,7 +163,10 @@ export async function POST(
     };
 
     // Crear la actualización
+    console.log('💾 Creando actualización en la base de datos...');
     const update = await CampaignUpdateService.create(updateData, processedFiles);
+
+    console.log('🎉 Actualización creada exitosamente:', update.id);
 
     // Respuesta exitosa
     return NextResponse.json(
@@ -159,7 +178,11 @@ export async function POST(
     );
 
   } catch (error) {
-    console.error('Error en POST /api/campaigns/[id]/updates:', error);
+    console.error('💥 Error en POST /api/campaigns/[id]/updates:', {
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
 
     // Error específico de validación o negocio
     if (error instanceof Error) {
