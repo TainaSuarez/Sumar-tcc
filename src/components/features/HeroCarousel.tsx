@@ -101,7 +101,7 @@ export function HeroCarousel({ session }: HeroCarouselProps) {
                   <Button size="lg" className="text-lg px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white">
                     Comenzar a donar
                   </Button>
-                  <Button variant="outline" size="lg" className="text-lg px-8 py-4 border-white text-white hover:bg-white hover:text-purple-600">
+                  <Button variant="outline" size="lg" className="text-lg px-8 py-4 bg-white text-purple-600 border-white hover:bg-purple-50 hover:text-purple-700">
                     Crear campaña
                   </Button>
                 </>

@@ -31,30 +31,7 @@ export default async function SignInPage() {
           className="object-cover"
           priority
         />
-        <div className="relative z-10 flex flex-col justify-center items-center text-white p-12">
-          <div className="max-w-md text-center">
-            <h1 className="text-4xl font-bold mb-6">
-              Bienvenido a Sumar+
-            </h1>
-            <p className="text-xl text-white/90 mb-8">
-              La plataforma donde cada donación cuenta y cada acción transforma vidas
-            </p>
-            <div className="space-y-4 text-left">
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full" />
-                <span className="text-white/90">Conecta con causas que importan</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full" />
-                <span className="text-white/90">Transparencia en cada donación</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 bg-white rounded-full" />
-                <span className="text-white/90">Impacto real en tu comunidad</span>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Right side - Form */}

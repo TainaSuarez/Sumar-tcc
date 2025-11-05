@@ -29,14 +29,14 @@ export function AuthHeader() {
 
   const isHomePage = pathname === '/';
 
-  // No mostrar en páginas de autenticación
-  if (pathname.includes('/auth/')) {
+  // No mostrar en páginas de autenticación, campañas y cómo funciona
+  if (pathname.includes('/auth/') || pathname === '/campaigns' || pathname === '/how-it-works') {
     return null;
   }
 
   return (
     <div
-      className={`absolute top-4 right-4 z-40 transition-all duration-300 ${
+      className={`${isHomePage ? 'absolute' : 'fixed'} top-4 right-4 z-40 transition-all duration-300 ${
         isHomePage 
           ? `rounded-full px-8 py-4 ${
               isScrolled
@@ -139,11 +139,11 @@ export function AuthHeader() {
           </div>
         </div>
       ) : (
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3">
           <Button
-            size="md"
+            size="sm"
             onClick={() => router.push('/auth/signin')}
-            className={`text-base transition-all duration-300 px-6 py-3 font-medium ${
+            className={`text-sm transition-all duration-300 px-4 py-2 ${
               isHomePage 
                 ? 'bg-purple-600 hover:bg-purple-700 text-white'
                 : 'bg-purple-600 hover:bg-purple-700 text-white'
@@ -152,9 +152,9 @@ export function AuthHeader() {
             Iniciar Sesión
           </Button>
           <Button
-            size="md"
+            size="sm"
             onClick={() => router.push('/auth/signup')}
-            className="bg-purple-600 hover:bg-purple-700 text-white text-base px-6 py-3 font-medium"
+            className="bg-purple-600 hover:bg-purple-700 text-white text-sm px-4 py-2"
           >
             Registrarse
           </Button>
