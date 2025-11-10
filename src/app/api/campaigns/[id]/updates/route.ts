@@ -168,6 +168,52 @@ export async function POST(
 
     console.log('🎉 Actualización creada exitosamente:', update.id);
 
+    // Enviar notificaciones por email a los donadores (en segundo plano)
+    // No esperar a que termine para no bloquear la respuesta
+    (async () => {
+      try {
+        console.log('📧 Enviando notificaciones a donadores...');
+
+        // Obtener emails de donadores
+        const donorsResponse = await fetch(
+          `${process.env.NEXTAUTH_URL || 'http://localhost:3001'}/api/campaigns/${campaignId}/donors`
+        );
+
+        if (donorsResponse.ok) {
+          const donorsData = await donorsResponse.json();
+          const donorEmails = donorsData.data?.donorEmails || [];
+
+          console.log(`📬 Enviando ${donorEmails.length} emails a donadores...`);
+
+          // Importar función de envío de email
+          const { sendCampaignUpdateNotification } = await import('@/lib/email-service');
+
+          // Enviar emails en paralelo (pero sin esperar la respuesta)
+          const campaignCreator = campaign.creator.organizationName ||
+            `${campaign.creator.firstName} ${campaign.creator.lastName || ''}`.trim();
+
+          for (const donor of donorEmails) {
+            sendCampaignUpdateNotification({
+              donorEmail: donor.email,
+              donorName: donor.name,
+              campaignTitle: campaign.title,
+              campaignCreator: campaignCreator,
+              updateTitle: update.title,
+              updateContent: update.content,
+              campaignSlug: campaign.slug,
+            }).catch(error => {
+              console.error(`❌ Error enviando email a ${donor.email}:`, error);
+            });
+          }
+
+          console.log(`✅ Proceso de envío de emails iniciado para ${donorEmails.length} donadores`);
+        }
+      } catch (error) {
+        console.error('❌ Error en proceso de notificaciones:', error);
+        // No lanzar error para no afectar la creación de la actualización
+      }
+    })();
+
     // Respuesta exitosa
     return NextResponse.json(
       {

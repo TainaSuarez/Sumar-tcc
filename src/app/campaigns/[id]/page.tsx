@@ -16,6 +16,7 @@ import { ImageCarousel } from '@/components/ui/image-carousel';
 import { Navbar } from '@/components/layout/navbar';
 import { Footer } from '@/components/layout/Footer';
 import { MockDonateButton } from '@/components/donations';
+import { CampaignDonors } from '@/components/campaigns/CampaignDonors';
 import type { CampaignUpdate } from '@/types/campaignUpdate';
 
 interface Campaign {
@@ -58,6 +59,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   const [error, setError] = useState<string | null>(null);
   const [campaignId, setCampaignId] = useState<string>('');
   const [donationSuccess, setDonationSuccess] = useState<{ amount: number } | null>(null);
+  const [donorsData, setDonorsData] = useState<any>(null);
 
   // Resolver params
   useEffect(() => {
@@ -70,7 +72,7 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
   useEffect(() => {
     const fetchCampaign = async () => {
       if (!campaignId) return;
-      
+
       try {
         const response = await fetch(`/api/campaigns/${campaignId}`);
         if (!response.ok) {
@@ -86,6 +88,25 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
     };
 
     fetchCampaign();
+  }, [campaignId]);
+
+  // Cargar datos de donadores
+  useEffect(() => {
+    const fetchDonors = async () => {
+      if (!campaignId) return;
+
+      try {
+        const response = await fetch(`/api/campaigns/${campaignId}/donors`);
+        if (response.ok) {
+          const data = await response.json();
+          setDonorsData(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching donors:', error);
+      }
+    };
+
+    fetchDonors();
   }, [campaignId]);
 
   const handleEditUpdate = (update: CampaignUpdate) => {
@@ -311,15 +332,15 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                           currentAmount: campaign.currentAmount
                         }}
                         className="w-full h-12 text-lg"
-                        onDonationSuccess={(donationData) => {
+                        onDonationSuccess={async (donationData) => {
                           console.log('Donación simulada exitosa:', donationData);
-                          
+
                           // Formatear el monto para mostrar
                           const formattedAmount = new Intl.NumberFormat('es-UY', {
                             style: 'currency',
                             currency: 'UYU',
                           }).format(donationData.amount);
-                          
+
                           // Mostrar notificación de éxito
                           toast.success(
                             `¡Gracias por tu donación de ${formattedAmount}!`,
@@ -328,21 +349,32 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                               duration: 5000,
                             }
                           );
-                          
+
                           // Mostrar mensaje persistente dentro de la página
                           setDonationSuccess({ amount: Number(donationData.amount ?? 0) })
-                          
+
                           // Actualizar el estado local de la campaña
                           if (campaign) {
                             setCampaign(prevCampaign => {
                               if (!prevCampaign) return null;
-                              
+
                               return {
                                 ...prevCampaign,
                                 currentAmount: Number(prevCampaign.currentAmount ?? 0) + Number(donationData.amount ?? 0),
                                 donationCount: Number(prevCampaign.donationCount ?? prevCampaign._count?.donations ?? 0) + 1
                               };
                             });
+                          }
+
+                          // Recargar la lista de donadores
+                          try {
+                            const response = await fetch(`/api/campaigns/${campaignId}/donors`);
+                            if (response.ok) {
+                              const data = await response.json();
+                              setDonorsData(data.data);
+                            }
+                          } catch (error) {
+                            console.error('Error al recargar donadores:', error);
                           }
                         }}
                       />
@@ -374,6 +406,18 @@ export default function CampaignDetailPage({ params }: CampaignDetailPageProps) 
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Sección de donadores */}
+              {donorsData && (
+                <CampaignDonors
+                  campaignId={campaignId}
+                  recentDonors={donorsData.recentDonors}
+                  topDonors={donorsData.topDonors}
+                  totalDonors={donorsData.totalDonors}
+                  totalAmount={donorsData.totalAmount}
+                  currency={donorsData.currency}
+                />
+              )}
             </div>
           </div>
 
