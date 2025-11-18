@@ -7,6 +7,11 @@ export const createCampaignSchema = z.object({
     .max(100, 'El título no puede exceder 100 caracteres')
     .trim(),
   
+  type: z.enum(['DONATION', 'CROWDFUNDING'], {
+    required_error: 'Debes seleccionar un tipo de campaña',
+    invalid_type_error: 'Tipo de campaña inválido',
+  }),
+  
   categoryId: z.string()
     .min(1, 'Debes seleccionar una categoría'),
   

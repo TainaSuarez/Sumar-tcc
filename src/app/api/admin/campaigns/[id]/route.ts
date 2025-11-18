@@ -288,10 +288,32 @@ export async function PATCH(
       );
     }
 
+    // Sanitizar updates - remover campos que no deben ser actualizados directamente
+    const sanitizedUpdates = { ...updates };
+    
+    // Remover campos computados o de relación que no deben estar en data
+    delete sanitizedUpdates.creator;
+    delete sanitizedUpdates.category;
+    delete sanitizedUpdates.subcategory;
+    delete sanitizedUpdates._count;
+    delete sanitizedUpdates.donations;
+    delete sanitizedUpdates.comments;
+    delete sanitizedUpdates.updates;
+    delete sanitizedUpdates.id;
+    delete sanitizedUpdates.slug;
+    delete sanitizedUpdates.createdAt;
+    delete sanitizedUpdates.updatedAt;
+    delete sanitizedUpdates.currentAmount;
+    delete sanitizedUpdates.donorCount;
+    delete sanitizedUpdates.viewCount;
+    delete sanitizedUpdates.shareCount;
+
+    console.log('📝 Datos sanitizados para actualizar:', sanitizedUpdates);
+
     // Actualizar campaña
     const updatedCampaign = await prisma.campaign.update({
       where: { id: campaignId },
-      data: updates,
+      data: sanitizedUpdates,
       include: {
         creator: {
           select: {
@@ -333,6 +355,117 @@ export async function PATCH(
 
   } catch (error) {
     console.error('Error al actualizar campaña:', error);
+    
+    // Proporcionar más detalles del error
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { 
+          error: 'Error al actualizar la campaña',
+          details: error.message 
+        },
+        { status: 500 }
+      );
+    }
+    
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * DELETE /api/admin/campaigns/[id]
+ * Elimina una campaña (solo administradores)
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    // Verificar autenticación
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar que el usuario sea administrador
+    if (session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: 'Acceso denegado. Se requieren permisos de administrador.' },
+        { status: 403 }
+      );
+    }
+
+    const resolvedParams = await params;
+    const campaignId = resolvedParams.id;
+
+    console.log('🗑️ Eliminando campaña:', campaignId);
+
+    // Validar que la campaña existe
+    const existingCampaign = await prisma.campaign.findUnique({
+      where: { id: campaignId },
+      select: {
+        id: true,
+        title: true,
+        _count: {
+          select: {
+            donations: true,
+            comments: true,
+            updates: true
+          }
+        }
+      }
+    });
+
+    if (!existingCampaign) {
+      return NextResponse.json(
+        { error: 'Campaña no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    console.log('📊 Campaña encontrada:', {
+      id: existingCampaign.id,
+      title: existingCampaign.title,
+      donations: existingCampaign._count.donations,
+      comments: existingCampaign._count.comments,
+      updates: existingCampaign._count.updates
+    });
+
+    // Eliminar en cascada: primero las relaciones, luego la campaña
+    // Prisma debería manejar esto automáticamente con onDelete: Cascade en el schema
+    
+    // Eliminar la campaña (las relaciones se eliminarán en cascada según el schema)
+    await prisma.campaign.delete({
+      where: { id: campaignId }
+    });
+
+    console.log('✅ Campaña eliminada exitosamente');
+
+    return NextResponse.json({
+      message: 'Campaña eliminada exitosamente',
+      campaignId: campaignId
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar campaña:', error);
+    
+    // Proporcionar más detalles del error
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { 
+          error: 'Error al eliminar la campaña',
+          details: error.message 
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

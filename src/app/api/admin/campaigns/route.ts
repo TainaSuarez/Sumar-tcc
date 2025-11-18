@@ -196,6 +196,11 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { campaignId, updates } = body;
 
+    console.log('📋 Datos recibidos:', {
+      campaignId,
+      updates: JSON.stringify(updates, null, 2)
+    });
+
     if (!campaignId) {
       return NextResponse.json(
         { error: 'ID de campaña requerido' },
@@ -215,10 +220,32 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    // Sanitizar updates - remover campos que no deben ser actualizados directamente
+    const sanitizedUpdates = { ...updates };
+    
+    // Remover campos computados o de relación que no deben estar en data
+    delete sanitizedUpdates.creator;
+    delete sanitizedUpdates.category;
+    delete sanitizedUpdates.subcategory;
+    delete sanitizedUpdates._count;
+    delete sanitizedUpdates.donations;
+    delete sanitizedUpdates.comments;
+    delete sanitizedUpdates.updates;
+    delete sanitizedUpdates.id;
+    delete sanitizedUpdates.slug;
+    delete sanitizedUpdates.createdAt;
+    delete sanitizedUpdates.updatedAt;
+    delete sanitizedUpdates.currentAmount;
+    delete sanitizedUpdates.donorCount;
+    delete sanitizedUpdates.viewCount;
+    delete sanitizedUpdates.shareCount;
+
+    console.log('📝 Datos sanitizados para actualizar:', sanitizedUpdates);
+
     // Actualizar campaña
     const updatedCampaign = await prisma.campaign.update({
       where: { id: campaignId },
-      data: updates,
+      data: sanitizedUpdates,
       include: {
         creator: {
           select: {
@@ -260,6 +287,18 @@ export async function PATCH(request: NextRequest) {
 
   } catch (error) {
     console.error('Error al actualizar campaña:', error);
+    
+    // Proporcionar más detalles del error
+    if (error instanceof Error) {
+      return NextResponse.json(
+        { 
+          error: 'Error al actualizar la campaña',
+          details: error.message 
+        },
+        { status: 500 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 }

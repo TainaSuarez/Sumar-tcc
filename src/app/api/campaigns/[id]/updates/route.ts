@@ -54,10 +54,15 @@ export async function POST(
       );
     }
 
-    if (campaign.creator.id !== session.user.id) {
+    // Verificar permisos: el usuario debe ser el creador O un administrador
+    const isCreator = campaign.creator.id === session.user.id;
+    const isAdmin = session.user.role === 'ADMIN';
+    
+    if (!isCreator && !isAdmin) {
       console.log('❌ Usuario sin permisos:', {
         userId: session.user.id,
-        creatorId: campaign.creator.id
+        creatorId: campaign.creator.id,
+        userRole: session.user.role
       });
       return NextResponse.json(
         { error: 'No tienes permisos para crear actualizaciones en esta campaña' },
@@ -233,7 +238,11 @@ export async function GET(
     const session = await getServerSession(authOptions);
     let includePrivate = false;
 
-    if (session?.user?.id === campaign.creator.id) {
+    // Permitir ver actualizaciones privadas si es el creador O un administrador
+    const isCreator = session?.user?.id === campaign.creator.id;
+    const isAdmin = session?.user?.role === 'ADMIN';
+    
+    if (isCreator || isAdmin) {
       includePrivate = true;
     }
 

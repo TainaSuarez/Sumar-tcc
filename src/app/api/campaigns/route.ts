@@ -66,6 +66,9 @@ export async function POST(request: NextRequest) {
     // Validar campos básicos
     const formDataSchema = z.object({
       title: z.string().min(1, 'El título es requerido'),
+      type: z.enum(['DONATION', 'CROWDFUNDING'], {
+        required_error: 'El tipo de campaña es requerido',
+      }),
       categoryId: z.string().min(1, 'La categoría es requerida'),
       goalAmount: z.string().min(1, 'La meta de recaudación es requerida'),
       shortDescription: z.string().min(1, 'La descripción corta es requerida'),
@@ -161,6 +164,7 @@ export async function POST(request: NextRequest) {
     // Preparar datos para crear la campaña
     const campaignData = {
       title: fields.title,
+      type: fields.type as 'DONATION' | 'CROWDFUNDING',
       categoryId: fields.categoryId,
       goalAmount,
       shortDescription: fields.shortDescription,
@@ -178,6 +182,7 @@ export async function POST(request: NextRequest) {
     // Validar datos con el esquema completo (omitir coverImage y additionalImages ya que se manejan por separado)
     const finalValidation = createCampaignSchema.omit({ coverImage: true, additionalImages: true }).safeParse({
       title: campaignData.title,
+      type: campaignData.type,
       categoryId: campaignData.categoryId,
       goalAmount: campaignData.goalAmount,
       shortDescription: campaignData.shortDescription,

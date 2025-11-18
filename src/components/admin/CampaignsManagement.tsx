@@ -22,6 +22,7 @@ import {
   XCircle,
   Eye,
   Edit,
+  Trash2,
   ChevronLeft,
   ChevronRight,
   Calendar,
@@ -320,6 +321,46 @@ export function CampaignsManagement() {
     setShowEditModal(true);
   };
 
+  const handleDeleteCampaign = (campaign: Campaign) => {
+    setConfirmationAction({
+      action: async () => {
+        try {
+          setUpdating(campaign.id);
+          
+          const response = await fetch(`/api/admin/campaigns/${campaign.id}`, {
+            method: 'DELETE',
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            const errorMessage = errorData.details 
+              ? `${errorData.error}: ${errorData.details}`
+              : (errorData.error || 'Error al eliminar la campaña');
+            throw new Error(errorMessage);
+          }
+
+          console.log('✅ Campaña eliminada exitosamente');
+          
+          // Actualizar la lista local
+          setCampaigns(prev => prev.filter(c => c.id !== campaign.id));
+          
+          // Refrescar datos
+          await fetchCampaigns();
+          
+        } catch (err) {
+          console.error('❌ Error eliminando campaña:', err);
+          setError(err instanceof Error ? err.message : 'Error al eliminar la campaña');
+        } finally {
+          setUpdating(null);
+          setShowConfirmationModal(false);
+        }
+      },
+      title: '¿Eliminar campaña?',
+      message: `¿Estás seguro de que deseas eliminar la campaña "${campaign.title}"? Esta acción no se puede deshacer y eliminará toda la información asociada (donaciones, comentarios, actualizaciones, etc.).`
+    });
+    setShowConfirmationModal(true);
+  };
+
   const handleSaveCampaign = async (campaignId: string, updates: Partial<Campaign>) => {
     try {
       const response = await fetch('/api/admin/campaigns', {
@@ -332,10 +373,15 @@ export function CampaignsManagement() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar la campaña');
+        const errorMessage = errorData.details 
+          ? `${errorData.error}: ${errorData.details}`
+          : (errorData.error || 'Error al actualizar la campaña');
+        console.error('❌ Error del servidor:', errorMessage);
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
+      console.log('✅ Respuesta exitosa:', result);
 
       // Actualizar la lista local
       setCampaigns(prev => prev.map(campaign => 
@@ -351,7 +397,7 @@ export function CampaignsManagement() {
       
       console.log('💾 Campaña guardada exitosamente');
     } catch (err) {
-      console.error('Error guardando campaña:', err);
+      console.error('❌ Error guardando campaña:', err);
       throw new Error(err instanceof Error ? err.message : 'Error desconocido');
     }
   };
@@ -841,6 +887,14 @@ export function CampaignsManagement() {
                       <DropdownMenuItem onClick={() => handleEditCampaign(campaign)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Editar
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteCampaign(campaign)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Eliminar
                       </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />

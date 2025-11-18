@@ -391,7 +391,16 @@ export class CampaignService {
         throw new Error('Campaña no encontrada');
       }
 
-      if (campaign.creatorId !== userId) {
+      // Verificar permisos: debe ser el creador O un administrador
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+
+      const isCreator = campaign.creatorId === userId;
+      const isAdmin = user?.role === 'ADMIN';
+
+      if (!isCreator && !isAdmin) {
         throw new Error('No tienes permisos para actualizar esta campaña');
       }
 

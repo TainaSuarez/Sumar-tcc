@@ -37,7 +37,10 @@ export async function GET(
     // Si la actualización es privada, verificar permisos
     if (!update.isPublic) {
       const session = await getServerSession(authOptions);
-      if (!session?.user?.id || session.user.id !== update.authorId) {
+      const isAuthor = session?.user?.id === update.authorId;
+      const isAdmin = session?.user?.role === 'ADMIN';
+      
+      if (!session?.user?.id || (!isAuthor && !isAdmin)) {
         return NextResponse.json(
           { error: 'No tienes permisos para ver esta actualización' },
           { status: 403 }
@@ -85,8 +88,11 @@ export async function PUT(
       );
     }
 
-    // Verificar permisos
-    if (existingUpdate.authorId !== session.user.id) {
+    // Verificar permisos: el usuario debe ser el autor O un administrador
+    const isAuthor = existingUpdate.authorId === session.user.id;
+    const isAdmin = session.user.role === 'ADMIN';
+    
+    if (!isAuthor && !isAdmin) {
       return NextResponse.json(
         { error: 'No tienes permisos para actualizar esta actualización' },
         { status: 403 }
@@ -237,8 +243,11 @@ export async function DELETE(
       );
     }
 
-    // Verificar permisos
-    if (existingUpdate.authorId !== session.user.id) {
+    // Verificar permisos: el usuario debe ser el autor O un administrador
+    const isAuthor = existingUpdate.authorId === session.user.id;
+    const isAdmin = session.user.role === 'ADMIN';
+    
+    if (!isAuthor && !isAdmin) {
       return NextResponse.json(
         { error: 'No tienes permisos para eliminar esta actualización' },
         { status: 403 }

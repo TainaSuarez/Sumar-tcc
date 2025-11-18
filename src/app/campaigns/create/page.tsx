@@ -19,7 +19,7 @@ export default function CreateCampaignPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando...</p>
         </div>
       </div>
@@ -42,6 +42,7 @@ export default function CreateCampaignPage() {
       
       // Agregar los campos del formulario
       formData.append('title', data.title);
+      formData.append('type', data.type);
       formData.append('categoryId', data.categoryId || '');
       formData.append('goalAmount', data.goalAmount.toString());
       formData.append('shortDescription', data.shortDescription);
@@ -123,10 +124,10 @@ export default function CreateCampaignPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            Crea tu campaña de crowdfunding
+            Crea tu campaña
           </h1>
           <p className="mt-2 text-gray-600 max-w-2xl mx-auto">
-            Comparte tu proyecto con el mundo y recibe el apoyo que necesitas para hacerlo realidad.
+            Comparte tu causa solidaria o proyecto con el mundo y recibe el apoyo que necesitas para hacerlo realidad.
           </p>
         </div>
 
@@ -137,11 +138,11 @@ export default function CreateCampaignPage() {
         <div className="mt-8 text-center text-sm text-gray-600">
           <p>
             Al crear una campaña, aceptas nuestros{' '}
-            <a href="/terms" className="text-emerald-600 hover:underline" target="_blank">
+            <a href="/terms" className="text-purple-600 hover:underline" target="_blank">
               términos y condiciones
             </a>
             {' '}y{' '}
-            <a href="/privacy" className="text-emerald-600 hover:underline" target="_blank">
+            <a href="/privacy" className="text-purple-600 hover:underline" target="_blank">
               política de privacidad
             </a>
             .

@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Upload, X, Loader2, DollarSign, Plus, ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, DollarSign, Plus, ImageIcon, XCircle } from 'lucide-react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +30,7 @@ interface CampaignFormProps {
 }
 
 export function CampaignForm({ onSubmit, isLoading = false, error, success }: CampaignFormProps) {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -40,6 +42,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
     resolver: zodResolver(createCampaignSchema),
     defaultValues: {
       title: '',
+      type: 'DONATION',
       categoryId: '',
       goalAmount: 0,
       shortDescription: '',
@@ -195,6 +198,23 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
     }
   };
 
+  const handleCancel = () => {
+    // Confirmar antes de cancelar si hay datos en el formulario
+    const hasData = form.getValues('title') || 
+                    form.getValues('description') || 
+                    form.getValues('shortDescription');
+    
+    if (hasData) {
+      const confirmCancel = window.confirm(
+        '¿Estás seguro de que deseas cancelar? Se perderán todos los datos ingresados.'
+      );
+      if (!confirmCancel) return;
+    }
+    
+    // Redirigir a la página principal o mis campañas
+    router.push('/my-campaigns');
+  };
+
   // Deshabilitar formulario si hay éxito
   const isFormDisabled = isLoading || !!success;
 
@@ -205,7 +225,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
           Crear Nueva Campaña
         </CardTitle>
         <CardDescription className="text-center text-gray-600">
-          Completa la información para crear tu campaña de crowdfunding
+          Completa la información para crear tu campaña solidaria o proyecto
         </CardDescription>
       </CardHeader>
 
@@ -235,10 +255,50 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                     <Input
                       placeholder="Escribe un título atractivo para tu campaña"
                       disabled={isFormDisabled}
-                      className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Tipo de Campaña */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de campaña</FormLabel>
+                  <Select
+                    disabled={isFormDisabled}
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500">
+                        <SelectValue placeholder="Selecciona el tipo de campaña" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="DONATION">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Donación</span>
+                          <span className="text-xs text-gray-500">Para causas solidarias y ayuda directa</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="CROWDFUNDING">
+                        <div className="flex flex-col">
+                          <span className="font-medium">Crowdfunding</span>
+                          <span className="text-xs text-gray-500">Para proyectos y emprendimientos</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Elige si tu campaña es para una causa solidaria o un proyecto/emprendimiento
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -255,7 +315,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                     <FormLabel>Categoría</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading || loadingCategories}>
                       <FormControl>
-                        <SelectTrigger className="h-12 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500">
+                        <SelectTrigger className="h-12 border-gray-300 focus:border-purple-500 focus:ring-purple-500">
                           <SelectValue placeholder="Selecciona una categoría" />
                         </SelectTrigger>
                       </FormControl>
@@ -299,7 +359,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                           type="number"
                           placeholder="0"
                           disabled={isFormDisabled}
-                          className="h-12 pl-10 border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                          className="h-12 pl-10 border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
@@ -325,7 +385,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                     <Textarea
                       placeholder="Escribe una descripción breve y atractiva de tu campaña"
                       disabled={isFormDisabled}
-                      className="min-h-[100px] border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 resize-none"
+                      className="min-h-[100px] border-gray-300 focus:border-purple-500 focus:ring-purple-500 resize-none"
                       maxLength={150}
                       {...field}
                     />
@@ -354,7 +414,7 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
                     <Textarea
                       placeholder="Describe tu proyecto en detalle. Incluye objetivos, beneficiarios, cronograma, y cualquier información relevante que ayude a los donantes a entender tu causa."
                       disabled={isFormDisabled}
-                      className="min-h-[200px] border-gray-300 focus:border-emerald-500 focus:ring-emerald-500"
+                      className="min-h-[200px] border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                       {...field}
                     />
                   </FormControl>
@@ -522,14 +582,16 @@ export function CampaignForm({ onSubmit, isLoading = false, error, success }: Ca
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1 h-12 border-gray-300 hover:bg-gray-50 transition-colors"
+                className="flex-1 h-12 border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400 transition-colors"
                 disabled={isFormDisabled}
+                onClick={handleCancel}
               >
-                Guardar como borrador
+                <XCircle className="mr-2 h-4 w-4" />
+                Cancelar campaña
               </Button>
               <Button
                 type="submit"
-                className="flex-1 h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors"
+                className="flex-1 h-12 bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
                 disabled={isFormDisabled}
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

@@ -67,7 +67,11 @@ export async function PUT(
       );
     }
 
-    if (existingCampaign.creatorId !== session.user.id) {
+    // Verificar permisos: el usuario debe ser el creador O un administrador
+    const isCreator = existingCampaign.creatorId === session.user.id;
+    const isAdmin = session.user.role === 'ADMIN';
+    
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
         { error: 'No tienes permisos para actualizar esta campaña' },
         { status: 403 }

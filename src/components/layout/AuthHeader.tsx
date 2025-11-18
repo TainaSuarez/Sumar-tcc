@@ -29,8 +29,16 @@ export function AuthHeader() {
 
   const isHomePage = pathname === '/';
 
-  // No mostrar en páginas de autenticación, campañas y cómo funciona
-  if (pathname.includes('/auth/') || pathname === '/campaigns' || pathname === '/how-it-works') {
+  // No mostrar en páginas de autenticación, campañas, cómo funciona, admin, mis campañas y perfil
+  if (
+    pathname.includes('/auth/') || 
+    pathname === '/campaigns' || 
+    pathname === '/how-it-works' || 
+    pathname.startsWith('/admin') || 
+    pathname === '/my-campaigns' ||
+    pathname === '/profile' ||
+    pathname.startsWith('/campaigns/create')
+  ) {
     return null;
   }
 

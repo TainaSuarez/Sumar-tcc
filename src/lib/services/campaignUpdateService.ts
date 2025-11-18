@@ -297,7 +297,16 @@ export class CampaignUpdateService {
         throw new Error('Actualización no encontrada');
       }
 
-      if (existingUpdate.authorId !== authorId) {
+      // Verificar permisos: debe ser el autor O un administrador
+      const user = await prisma.user.findUnique({
+        where: { id: authorId },
+        select: { role: true },
+      });
+
+      const isAuthor = existingUpdate.authorId === authorId;
+      const isAdmin = user?.role === 'ADMIN';
+
+      if (!isAuthor && !isAdmin) {
         throw new Error('No tienes permisos para actualizar esta actualización');
       }
 
@@ -403,7 +412,16 @@ export class CampaignUpdateService {
         throw new Error('Actualización no encontrada');
       }
 
-      if (existingUpdate.authorId !== authorId) {
+      // Verificar permisos: debe ser el autor O un administrador
+      const user = await prisma.user.findUnique({
+        where: { id: authorId },
+        select: { role: true },
+      });
+
+      const isAuthor = existingUpdate.authorId === authorId;
+      const isAdmin = user?.role === 'ADMIN';
+
+      if (!isAuthor && !isAdmin) {
         throw new Error('No tienes permisos para eliminar esta actualización');
       }
 

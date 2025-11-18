@@ -20,6 +20,7 @@ export interface Campaign extends PrismaCampaign {
 // Interface para crear una campaña (formulario frontend)
 export interface CreateCampaignInput {
   title: string;
+  type: 'DONATION' | 'CROWDFUNDING';
   categoryId: string;
   goalAmount: number;
   shortDescription: string;
